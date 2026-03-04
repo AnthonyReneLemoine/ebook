@@ -153,7 +153,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <body>
 
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v2</small></div>
+  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v3</small></div>
   <div id="hdr-r">
     <button class="hbtn" id="btn-lib" onclick="goLib()" style="display:none">Bibliothèque</button>
     <button class="hbtn" id="btn-qhdr" onclick="toggleQuotes()" style="display:none">Citations</button>
@@ -483,6 +483,9 @@ async function openBook(id){
     if(saved&&saved.cfi)await S.rendition.display(saved.cfi);
     else await S.rendition.display();
 
+    // Ré-appliquer la taille de police à chaque nouveau chapitre rendu
+    S.rendition.on('rendered',()=>applyFontSize());
+
     // Écouter les changements de page
     S.rendition.on('relocated',loc=>{
       const pct=S.book.locations.percentageFromCfi(loc.start.cfi);
@@ -547,10 +550,16 @@ document.addEventListener('touchend',e=>{
   if(Math.abs(dx)>60){if(dx<0)epubNext();else epubPrev();}
 });
 
+function applyFontSize(){
+  if(!S.rendition)return;
+  S.rendition.getContents().forEach(c=>{
+    c.document.documentElement.style.fontSize=S.fontSize+'%';
+  });
+}
 function chFont(d){
   S.fontSize=Math.max(80,Math.min(150,S.fontSize+(d*10)));
   $('font-sz').textContent=S.fontSize+'%';
-  if(S.rendition)S.rendition.themes.fontSize(S.fontSize+'%');
+  applyFontSize();
 }
 
 // CITATIONS
