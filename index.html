@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>Liseuse</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='3' width='18' height='26' rx='2' fill='%23c0392b'/%3E%3Crect x='6' y='3' width='3' height='26' fill='%23922b21'/%3E%3Crect x='10' y='8' width='9' height='1.5' rx='1' fill='%23f9e4e4' opacity='.8'/%3E%3Crect x='10' y='12' width='7' height='1.5' rx='1' fill='%23f9e4e4' opacity='.8'/%3E%3Crect x='10' y='16' width='8' height='1.5' rx='1' fill='%23f9e4e4' opacity='.8'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
@@ -153,7 +154,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <body>
 
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse</div>
+  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v4</small></div>
   <div id="hdr-r">
     <button class="hbtn" id="btn-lib" onclick="goLib()" style="display:none">Bibliothèque</button>
     <button class="hbtn" id="btn-qhdr" onclick="toggleQuotes()" style="display:none">Citations</button>
@@ -279,7 +280,7 @@ function goCfg(){fillCfg();view('view-cfg');$('btn-lib').style.display='inline-b
 // GITHUB API
 const GH_QUOTES='citations.json';const GH_BOOKS='books.json';
 function ghH(){return{'Authorization':'token '+S.cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'}}
-function ghUrl(f){return`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/contents/${f}`}
+function ghUrl(f,branch){const b=branch||S.cfg.branch||'main';return`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/contents/${f}?ref=${b}`}
 
 async function ghGet(path){
   const r=await fetch(ghUrl(path),{headers:ghH()});
@@ -441,6 +442,10 @@ async function openBook(id){
     $('btn-lib').style.display='inline-block';
     $('btn-qhdr').style.display='inline-block';
 
+    // Afficher la vue AVANT de lire les dimensions (sinon clientWidth/Height = 0 car display:none)
+    view('view-reader');
+    await new Promise(r=>requestAnimationFrame(r));
+
     // Créer le livre epub.js
     S.book=ePub(arrayBuf);
     await S.book.ready;
@@ -450,7 +455,7 @@ async function openBook(id){
     S.toc=toc.toc||[];
     renderToc(S.toc);
 
-    // Créer le rendition
+    // Créer le rendition avec les vraies dimensions du conteneur
     const wrap=$('epub-wrap');
     const w=wrap.clientWidth;
     const h=wrap.clientHeight;
@@ -479,6 +484,9 @@ async function openBook(id){
     if(saved&&saved.cfi)await S.rendition.display(saved.cfi);
     else await S.rendition.display();
 
+    // Ré-appliquer la taille de police à chaque nouveau chapitre rendu
+    S.rendition.on('rendered',()=>applyFontSize());
+
     // Écouter les changements de page
     S.rendition.on('relocated',loc=>{
       const pct=S.book.locations.percentageFromCfi(loc.start.cfi);
@@ -491,7 +499,6 @@ async function openBook(id){
     S.book.locations.generate(1000);
 
     renderQPanel();
-    view('view-reader');
     toast('');
   }catch(e){toast('Erreur : '+e.message);console.error(e);}
 }
@@ -511,7 +518,7 @@ function renderToc(toc,level=0){
 
 function highlightToc(href){
   document.querySelectorAll('.toc-item').forEach(el=>{
-    el.classList.toggle('on',href&&href.includes(el.dataset.href));
+    el.classList.toggle('on',!!(href&&el.dataset.href&&href.includes(el.dataset.href)));
   });
 }
 
@@ -544,10 +551,16 @@ document.addEventListener('touchend',e=>{
   if(Math.abs(dx)>60){if(dx<0)epubNext();else epubPrev();}
 });
 
+function applyFontSize(){
+  if(!S.rendition)return;
+  S.rendition.getContents().forEach(c=>{
+    c.document.documentElement.style.fontSize=S.fontSize+'%';
+  });
+}
 function chFont(d){
   S.fontSize=Math.max(80,Math.min(150,S.fontSize+(d*10)));
   $('font-sz').textContent=S.fontSize+'%';
-  if(S.rendition)S.rendition.themes.fontSize(S.fontSize+'%');
+  applyFontSize();
 }
 
 // CITATIONS
@@ -605,7 +618,8 @@ async function loadQuotesGH(){
   try{
     const d=await ghGet(GH_QUOTES);
     if(!d){S.quotes=[];return;}
-    S.quotes=JSON.parse(atob(d.content.replace(/\n/g,'')));
+    const raw=atob(d.content.replace(/\n/g,''));
+    try{S.quotes=JSON.parse(decodeURIComponent(escape(raw)));}catch(e){S.quotes=JSON.parse(raw);}
     S._sha=d.sha;
   }catch(e){S.quotes=[];}
   renderQPanel();
@@ -627,13 +641,6 @@ function toggleSidebar(){const s=$('sidebar'),o=$('overlay');if(s.classList.togg
 function toggleQuotes(){const p=$('qpanel'),o=$('overlay');if(p.classList.toggle('open'))o.classList.add('show');else o.classList.remove('show');if(p.classList.contains('open'))renderQPanel()}
 function closePanels(){$('sidebar').classList.remove('open');$('qpanel').classList.remove('open');$('overlay').classList.remove('show')}
 $('modal-note').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)commitQ()});
-
-// Resize
-window.addEventListener('resize',()=>{
-  if(S.rendition&&$('view-reader').classList.contains('on')){
-    S.rendition.resize($('epub-wrap').clientWidth,$('epub-wrap').clientHeight);
-  }
-});
 
 // INIT
 loadCfg();
