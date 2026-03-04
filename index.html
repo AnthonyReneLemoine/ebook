@@ -441,6 +441,10 @@ async function openBook(id){
     $('btn-lib').style.display='inline-block';
     $('btn-qhdr').style.display='inline-block';
 
+    // Afficher la vue AVANT de lire les dimensions (sinon clientWidth/Height = 0 car display:none)
+    view('view-reader');
+    await new Promise(r=>requestAnimationFrame(r));
+
     // Créer le livre epub.js
     S.book=ePub(arrayBuf);
     await S.book.ready;
@@ -450,7 +454,7 @@ async function openBook(id){
     S.toc=toc.toc||[];
     renderToc(S.toc);
 
-    // Créer le rendition
+    // Créer le rendition avec les vraies dimensions du conteneur
     const wrap=$('epub-wrap');
     const w=wrap.clientWidth;
     const h=wrap.clientHeight;
@@ -491,7 +495,6 @@ async function openBook(id){
     S.book.locations.generate(1000);
 
     renderQPanel();
-    view('view-reader');
     toast('');
   }catch(e){toast('Erreur : '+e.message);console.error(e);}
 }
