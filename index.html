@@ -279,7 +279,7 @@ function goCfg(){fillCfg();view('view-cfg');$('btn-lib').style.display='inline-b
 // GITHUB API
 const GH_QUOTES='citations.json';const GH_BOOKS='books.json';
 function ghH(){return{'Authorization':'token '+S.cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'}}
-function ghUrl(f){return`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/contents/${f}`}
+function ghUrl(f,branch){const b=branch||S.cfg.branch||'main';return`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/contents/${f}?ref=${b}`}
 
 async function ghGet(path){
   const r=await fetch(ghUrl(path),{headers:ghH()});
@@ -511,7 +511,7 @@ function renderToc(toc,level=0){
 
 function highlightToc(href){
   document.querySelectorAll('.toc-item').forEach(el=>{
-    el.classList.toggle('on',href&&href.includes(el.dataset.href));
+    el.classList.toggle('on',!!(href&&el.dataset.href&&href.includes(el.dataset.href)));
   });
 }
 
@@ -605,7 +605,8 @@ async function loadQuotesGH(){
   try{
     const d=await ghGet(GH_QUOTES);
     if(!d){S.quotes=[];return;}
-    S.quotes=JSON.parse(atob(d.content.replace(/\n/g,'')));
+    const raw=atob(d.content.replace(/\n/g,''));
+    try{S.quotes=JSON.parse(decodeURIComponent(escape(raw)));}catch(e){S.quotes=JSON.parse(raw);}
     S._sha=d.sha;
   }catch(e){S.quotes=[];}
   renderQPanel();
@@ -627,13 +628,6 @@ function toggleSidebar(){const s=$('sidebar'),o=$('overlay');if(s.classList.togg
 function toggleQuotes(){const p=$('qpanel'),o=$('overlay');if(p.classList.toggle('open'))o.classList.add('show');else o.classList.remove('show');if(p.classList.contains('open'))renderQPanel()}
 function closePanels(){$('sidebar').classList.remove('open');$('qpanel').classList.remove('open');$('overlay').classList.remove('show')}
 $('modal-note').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)commitQ()});
-
-// Resize
-window.addEventListener('resize',()=>{
-  if(S.rendition&&$('view-reader').classList.contains('on')){
-    S.rendition.resize($('epub-wrap').clientWidth,$('epub-wrap').clientHeight);
-  }
-});
 
 // INIT
 loadCfg();
