@@ -149,16 +149,44 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 #toast.show{transform:translateX(-50%) translateY(0)}
 .spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--rust);border-radius:50%;animation:spin .75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* AUTH */
+#view-auth{position:fixed;inset:0;background:var(--parchment);z-index:1000;display:flex;align-items:center;justify-content:center}
+.auth-box{background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:40px 36px;max-width:380px;width:100%;box-shadow:0 8px 40px var(--shadow);animation:fadeUp .4s ease both}
+.auth-box h2{font-family:var(--fr);font-size:1.9rem;font-weight:600;margin-bottom:2px;color:var(--ink)}
+.auth-box .auth-ver{font-size:.65rem;color:var(--ink-pale);font-family:var(--fu);margin-bottom:22px}
+.auth-box .sub{color:var(--ink-pale);font-size:.82rem;margin-bottom:26px;line-height:1.6}
+#auth-err{color:#c0392b;font-size:.78rem;margin-top:7px;min-height:1.1em}
 </style>
 </head>
 <body>
 
+<!-- AUTH OVERLAY -->
+<div id="view-auth">
+  <div class="auth-box">
+    <h2>Liseuse</h2>
+    <div class="auth-ver">v6</div>
+    <p class="sub" id="auth-sub">Entrez votre mot de passe pour accéder à votre bibliothèque.</p>
+    <div class="fg">
+      <label id="auth-lbl">Mot de passe</label>
+      <input type="password" id="auth-pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
+    <div class="fg" id="auth-confirm-fg" style="display:none">
+      <label>Confirmer le mot de passe</label>
+      <input type="password" id="auth-pwd2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
+    <div id="auth-err"></div>
+    <button class="btn-save" id="auth-btn" style="margin-top:10px" onclick="authSubmit()">Se connecter</button>
+  </div>
+</div>
+
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v5</small></div>
+  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v6</small></div>
   <div id="hdr-r">
     <button class="hbtn" id="btn-lib" onclick="goLib()" style="display:none">Bibliothèque</button>
     <button class="hbtn" id="btn-qhdr" onclick="toggleQuotes()" style="display:none">Citations</button>
     <button class="hbtn" onclick="goCfg()">Config</button>
+    <button class="hbtn" onclick="logout()" title="Verrouiller la session">Verrouiller</button>
   </div>
 </div>
 
@@ -642,9 +670,66 @@ function toggleQuotes(){const p=$('qpanel'),o=$('overlay');if(p.classList.toggle
 function closePanels(){$('sidebar').classList.remove('open');$('qpanel').classList.remove('open');$('overlay').classList.remove('show')}
 $('modal-note').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)commitQ()});
 
+// AUTH
+const AUTH_KEY='liseuse_auth';const SESSION_KEY='liseuse_session';
+
+async function hashPwd(p){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function isAuthed(){return sessionStorage.getItem(SESSION_KEY)==='1'}
+
+async function authSubmit(){
+  const pwd=$('auth-pwd').value;
+  $('auth-err').textContent='';
+  if(!pwd)return;
+  const stored=localStorage.getItem(AUTH_KEY);
+  if(!stored){
+    // Premier lancement : création du mot de passe
+    if(pwd.length<6){$('auth-err').textContent='Minimum 6 caractères';return}
+    const pwd2=$('auth-pwd2').value;
+    if(pwd!==pwd2){$('auth-err').textContent='Les mots de passe ne correspondent pas';return}
+    localStorage.setItem(AUTH_KEY,await hashPwd(pwd));
+    authSuccess();
+  }else{
+    if(await hashPwd(pwd)===stored){authSuccess();}
+    else{$('auth-err').textContent='Mot de passe incorrect';$('auth-pwd').value='';$('auth-pwd').focus();}
+  }
+}
+
+function authSuccess(){
+  sessionStorage.setItem(SESSION_KEY,'1');
+  $('view-auth').style.display='none';
+  initApp();
+}
+
+function logout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  $('view-auth').style.display='flex';
+  $('auth-pwd').value='';$('auth-err').textContent='';
+  // Réinitialiser l'état de lecture
+  if(S.rendition){S.rendition.destroy();S.rendition=null;}
+  $('auth-pwd').focus();
+}
+
+function showAuthScreen(){
+  if(!localStorage.getItem(AUTH_KEY)){
+    $('auth-sub').textContent='Première connexion — créez un mot de passe pour protéger votre liseuse.';
+    $('auth-lbl').textContent='Choisir un mot de passe';
+    $('auth-confirm-fg').style.display='block';
+    $('auth-btn').textContent='Créer le mot de passe';
+  }
+  setTimeout(()=>$('auth-pwd').focus(),100);
+}
+
+function initApp(){
+  loadCfg();
+  if(S.cfg.token&&S.cfg.user&&S.cfg.repo){goLib();loadBooks();loadQuotesGH();}else{view('view-cfg')}
+}
+
 // INIT
-loadCfg();
-if(S.cfg.token&&S.cfg.user&&S.cfg.repo){goLib();loadBooks();loadQuotesGH();}else{view('view-cfg')}
+if(isAuthed()){$('view-auth').style.display='none';initApp();}else{showAuthScreen();}
 </script>
 </body>
 </html>
