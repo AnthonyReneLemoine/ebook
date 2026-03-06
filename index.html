@@ -165,7 +165,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <div id="view-auth">
   <div class="auth-box">
     <h2>Liseuse</h2>
-    <div class="auth-ver">v6</div>
+    <div class="auth-ver">v7</div>
     <p class="sub" id="auth-sub">Entrez votre mot de passe pour accéder à votre bibliothèque.</p>
     <div class="fg">
       <label id="auth-lbl">Mot de passe</label>
@@ -181,7 +181,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v6</small></div>
+  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v7</small></div>
   <div id="hdr-r">
     <button class="hbtn" id="btn-lib" onclick="goLib()" style="display:none">Bibliothèque</button>
     <button class="hbtn" id="btn-qhdr" onclick="toggleQuotes()" style="display:none">Citations</button>
@@ -507,24 +507,42 @@ async function openBook(id){
     });
     S.rendition.themes.select('liseuse');
 
-    const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-    const saved=prog[id];
-    if(saved&&saved.cfi)await S.rendition.display(saved.cfi);
-    else await S.rendition.display();
-
     // Ré-appliquer la taille de police à chaque nouveau chapitre rendu
     S.rendition.on('rendered',()=>applyFontSize());
 
-    // Écouter les changements de page
+    // Écouter les changements de page — AVANT display() pour ne pas manquer le premier événement
     S.rendition.on('relocated',loc=>{
-      const pct=S.book.locations.percentageFromCfi(loc.start.cfi);
-      $('epub-progress-bar').style.width=(Math.round(pct*100)||0)+'%';
+      const cfi=loc.start.cfi;
       const p=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-      p[id]={cfi:loc.start.cfi,pct:Math.round(pct*100)};
+      const pct=(S.book.locations&&S.book.locations.length())
+        ?Math.round((S.book.locations.percentageFromCfi(cfi)||0)*100)
+        :(p[id]?p[id].pct:0);
+      $('epub-progress-bar').style.width=pct+'%';
+      p[id]={cfi,pct};
       localStorage.setItem('liseuse_prog',JSON.stringify(p));
       highlightToc(loc.start.href);
     });
-    S.book.locations.generate(1000);
+
+    // Générer les positions et mettre à jour le pct une fois prêt
+    S.book.locations.generate(1000).then(()=>{
+      if(!S.rendition)return;
+      const loc=S.rendition.currentLocation();
+      if(!loc)return;
+      const pct=Math.round((S.book.locations.percentageFromCfi(loc.start.cfi)||0)*100);
+      $('epub-progress-bar').style.width=pct+'%';
+      const p=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+      if(p[id]){p[id].pct=pct;localStorage.setItem('liseuse_prog',JSON.stringify(p));}
+      renderGrid();
+    });
+
+    const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+    const saved=prog[id];
+    if(saved&&saved.cfi){
+      try{await S.rendition.display(saved.cfi);}
+      catch(e){await S.rendition.display();}  // CFI invalide → début du livre
+    }else{
+      await S.rendition.display();
+    }
 
     renderQPanel();
     toast('');
