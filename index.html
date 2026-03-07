@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --parchment:#f2ede4;--cream:#faf8f4;--ink:#1a1208;--ink-mid:#5c4f3a;--ink-pale:#9a8e7a;
@@ -25,17 +27,38 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 #hdr-r{display:flex;align-items:center;gap:6px}
 .hbtn{font-family:var(--fu);font-size:.73rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cream);background:none;border:1px solid rgba(250,248,244,.2);padding:5px 12px;border-radius:3px;cursor:pointer;transition:all .2s}
 .hbtn:hover{background:rgba(201,147,58,.15);border-color:var(--gold);color:var(--gold)}
+#user-badge{display:flex;align-items:center;gap:8px;color:var(--cream);font-size:.75rem;opacity:.7}
+#user-avatar{width:26px;height:26px;border-radius:50%;border:1px solid rgba(201,147,58,.4)}
 
 /* VIEWS */
 .view{display:none;padding-top:50px;min-height:100vh}
 .view.on{display:block}
-#view-cfg.on{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:50px 20px 20px}
 
-/* CONFIG */
-.cfg-box{background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:36px 32px;max-width:480px;width:100%;box-shadow:0 8px 40px var(--shadow);animation:fadeUp .4s ease both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* LOGIN SCREEN */
+#view-login.on{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:50px 20px 20px}
+.login-box{background:var(--cream);border:1px solid var(--border);border-radius:14px;padding:48px 40px;max-width:420px;width:100%;box-shadow:0 12px 56px var(--shadow);text-align:center;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.login-box .lk{font-family:var(--fr);font-size:3rem;margin-bottom:16px}
+.login-box h1{font-family:var(--fr);font-size:2rem;font-weight:300;margin-bottom:8px}
+.login-box h1 em{color:var(--rust);font-style:italic}
+.login-box .sub{color:var(--ink-pale);font-size:.85rem;line-height:1.65;margin-bottom:32px}
+.btn-google{display:inline-flex;align-items:center;gap:12px;padding:13px 28px;background:white;border:1.5px solid var(--border);border-radius:6px;font-size:.9rem;font-family:var(--fu);font-weight:500;color:var(--ink);cursor:pointer;transition:all .22s;box-shadow:0 2px 8px rgba(26,18,8,.08)}
+.btn-google:hover{border-color:var(--rust);box-shadow:0 4px 20px rgba(139,58,26,.15);transform:translateY(-1px)}
+.btn-google svg{width:20px;height:20px;flex-shrink:0}
+.login-note{margin-top:20px;font-size:.72rem;color:var(--ink-pale);line-height:1.6}
+
+/* CONFIG (Google Client ID) */
+#view-cfg.on{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:50px 20px 20px}
+.cfg-box{background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:36px 32px;max-width:520px;width:100%;box-shadow:0 8px 40px var(--shadow);animation:fadeUp .4s ease both}
 .cfg-box h2{font-family:var(--fr);font-size:1.7rem;font-weight:600;margin-bottom:6px}
 .cfg-box .sub{color:var(--ink-pale);font-size:.82rem;margin-bottom:28px;line-height:1.6}
+.cfg-steps{counter-reset:step;margin-bottom:24px}
+.cfg-step{counter-increment:step;padding:14px 16px 14px 48px;position:relative;border-left:2px solid var(--border);margin-left:12px;margin-bottom:4px}
+.cfg-step::before{content:counter(step);position:absolute;left:-14px;top:12px;width:26px;height:26px;background:var(--rust);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:500;line-height:26px;text-align:center}
+.cfg-step p{font-size:.82rem;color:var(--ink-mid);line-height:1.6}
+.cfg-step a{color:var(--rust);text-decoration:none}
+.cfg-step a:hover{text-decoration:underline}
+.cfg-step code{background:var(--parchment);padding:1px 6px;border-radius:3px;font-size:.8rem;font-family:monospace}
 .fg{margin-bottom:18px}
 .fg label{display:block;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-mid);margin-bottom:7px}
 .fg input{width:100%;padding:10px 13px;background:white;border:1px solid var(--border);border-radius:5px;font-size:.88rem;font-family:var(--fu);color:var(--ink);outline:none;transition:border-color .2s}
@@ -79,10 +102,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .tbtn{width:30px;height:30px;border:1px solid var(--border);background:none;color:var(--ink-mid);border-radius:4px;cursor:pointer;font-size:.82rem;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
 .tbtn:hover{background:var(--rust);color:white;border-color:var(--rust)}
 #font-sz{font-size:.72rem;color:var(--ink-pale);min-width:24px;text-align:center}
-
 #rlayout{display:flex;margin-top:94px;height:calc(100vh - 94px)}
-
-/* Sidebar TOC */
 #sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--cream);border-right:1px solid var(--border);position:fixed;top:94px;bottom:0;left:0;overflow-y:auto;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:100}
 #sidebar.open{transform:translateX(0)}
 #sb-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-pale);padding:16px 16px 10px;border-bottom:1px solid var(--border);font-weight:500}
@@ -90,27 +110,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toc-item:hover{background:rgba(139,58,26,.05);color:var(--ink)}
 .toc-item.on{border-left-color:var(--rust);color:var(--rust);background:rgba(139,58,26,.04)}
 .toc-item.sub{padding-left:28px;font-size:.78rem}
-
-/* Zone epub.js */
 #epub-wrap{flex:1;overflow:hidden;position:relative;background:var(--parchment)}
 #epub-viewer{width:100%;height:100%}
-
-/* Navigation */
 #epub-prev,#epub-next{position:fixed;top:50%;transform:translateY(-50%);width:36px;height:64px;background:rgba(250,248,244,0.92);border:1px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--ink-mid);transition:all .2s;z-index:120}
 #epub-prev{left:2px}
 #epub-next{right:2px}
 #epub-prev:hover,#epub-next:hover{background:var(--rust);color:white;border-color:var(--rust)}
 #epub-progress{position:fixed;bottom:0;left:0;right:0;height:3px;background:var(--border);z-index:120}
 #epub-progress-bar{height:100%;background:var(--rust);transition:width .3s}
-
-@media(min-width:900px){
-  #sidebar{transform:translateX(0);position:fixed}
-  #epub-wrap{margin-left:var(--sidebar-w)}
-  #epub-prev{left:calc(var(--sidebar-w) + 2px)}
-}
-@media(max-width:500px){
-  #epub-prev,#epub-next{width:28px;height:50px;font-size:1rem}
-}
+@media(min-width:900px){#sidebar{transform:translateX(0);position:fixed}#epub-wrap{margin-left:var(--sidebar-w)}#epub-prev{left:calc(var(--sidebar-w) + 2px)}}
+@media(max-width:500px){#epub-prev,#epub-next{width:28px;height:50px;font-size:1rem}}
 
 /* QUOTES PANEL */
 #qpanel{width:300px;flex-shrink:0;background:var(--cream);border-left:1px solid var(--border);position:fixed;top:94px;bottom:0;right:0;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:100}
@@ -149,42 +158,79 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 #toast.show{transform:translateX(-50%) translateY(0)}
 .spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--rust);border-radius:50%;animation:spin .75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Drive status indicator */
+#drive-status{font-size:.68rem;color:var(--ink-pale);display:flex;align-items:center;gap:4px}
+#drive-status .dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
+#drive-status.ok .dot{background:#4caf50}
+#drive-status.err .dot{background:#c0392b}
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>&#128218;</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v4</small></div>
+  <div id="logo" onclick="goLib()"><span>📚</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v5</small></div>
   <div id="hdr-r">
+    <div id="drive-status" style="display:none"><div class="dot"></div><span id="drive-status-txt">Drive</span></div>
+    <div id="user-badge" style="display:none">
+      <img id="user-avatar" src="" alt="">
+      <span id="user-name"></span>
+    </div>
     <button class="hbtn" id="btn-lib" onclick="goLib()" style="display:none">Bibliothèque</button>
     <button class="hbtn" id="btn-qhdr" onclick="toggleQuotes()" style="display:none">Citations</button>
-    <button class="hbtn" onclick="goCfg()">Config</button>
+    <button class="hbtn" id="btn-cfg" onclick="goCfg()" style="display:none">Config</button>
+    <button class="hbtn" id="btn-logout" onclick="signOut()" style="display:none">Déconnexion</button>
   </div>
 </div>
 
-<!-- CONFIG -->
+<!-- SETUP (Client ID) -->
 <div class="view on" id="view-cfg">
   <div class="cfg-box">
-    <h2>Configuration</h2>
-    <p class="sub">Ces paramètres permettent d'accéder à votre repo GitHub et de sauvegarder vos citations.</p>
-    <div class="fg">
-      <label>Token GitHub (Personal Access Token)</label>
-      <input type="password" id="cfg-token" placeholder="ghp_xxxxxxxxxxxxxxxx">
-      <div class="hint"><a href="https://github.com/settings/tokens/new" target="_blank">Créer un token</a> avec les droits <strong>repo</strong>. Stocké uniquement dans votre navigateur.</div>
+    <h2>Configuration Google</h2>
+    <p class="sub">Pour utiliser la liseuse, vous devez créer une application Google OAuth et renseigner votre Client ID. Cette opération est à faire une seule fois.</p>
+    <div class="cfg-steps">
+      <div class="cfg-step">
+        <p>Rendez-vous sur <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> et créez un nouveau projet (ex : <code>liseuse</code>).</p>
+      </div>
+      <div class="cfg-step">
+        <p>Dans <strong>APIs &amp; Services → Bibliothèque</strong>, activez l'<strong>API Google Drive</strong>.</p>
+      </div>
+      <div class="cfg-step">
+        <p>Dans <strong>APIs &amp; Services → Identifiants</strong>, créez un <strong>ID client OAuth 2.0</strong> de type <em>Application Web</em>. Ajoutez l'URL de votre GitHub Pages dans <em>Origines JavaScript autorisées</em> (ex : <code>https://VotreLogin.github.io</code>).</p>
+      </div>
+      <div class="cfg-step">
+        <p>Dans <strong>Écran de consentement OAuth</strong>, ajoutez votre adresse Gmail en <em>Utilisateurs test</em>.</p>
+      </div>
+      <div class="cfg-step">
+        <p>Copiez l'<strong>ID client</strong> (se termine par <code>.apps.googleusercontent.com</code>) et collez-le ci-dessous.</p>
+      </div>
     </div>
     <div class="fg">
-      <label>Utilisateur GitHub</label>
-      <input type="text" id="cfg-user" placeholder="votre-login">
+      <label>Google OAuth Client ID</label>
+      <input type="text" id="cfg-clientid" placeholder="123456789-xxxx.apps.googleusercontent.com">
+      <div class="hint">Stocké uniquement dans votre navigateur (localStorage). Non transmis à des tiers.</div>
     </div>
     <div class="fg">
-      <label>Nom du repo</label>
-      <input type="text" id="cfg-repo" placeholder="ebook">
+      <label>Nom du dossier Drive <span style="font-weight:300;text-transform:none">(optionnel)</span></label>
+      <input type="text" id="cfg-folder" placeholder="Liseuse" value="Liseuse">
+      <div class="hint">Un dossier sera créé à la racine de votre Drive avec ce nom.</div>
     </div>
-    <div class="fg">
-      <label>Branche</label>
-      <input type="text" id="cfg-branch" value="main">
-    </div>
-    <button class="btn-save" onclick="saveConfig()">Enregistrer et ouvrir la bibliothèque</button>
+    <button class="btn-save" onclick="saveSetup()">Enregistrer et se connecter</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="view" id="view-login">
+  <div class="login-box">
+    <div class="lk">📖</div>
+    <h1>Ma <em>liseuse</em></h1>
+    <p class="sub">Vos livres EPUB et citations sont stockés dans votre Google Drive personnel. Connectez-vous pour accéder à votre bibliothèque.</p>
+    <button class="btn-google" onclick="signIn()">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+      Se connecter avec Google
+    </button>
+    <p class="login-note">Seul votre compte Google autorisé peut accéder à cette application.<br>Aucune donnée ne transite par un serveur tiers.</p>
+    <p style="margin-top:16px;font-size:.72rem;color:var(--ink-pale)"><a href="#" onclick="goCfg();return false" style="color:var(--rust)">Modifier la configuration</a></p>
   </div>
 </div>
 
@@ -197,7 +243,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
     <div id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave()">
       <div class="icon">📂</div>
-      <div>Glissez un <strong>.epub</strong> ici, ou cliquez pour l'uploader dans votre repo GitHub</div>
+      <div>Glissez un <strong>.epub</strong> ici, ou cliquez pour l'uploader dans votre Drive</div>
       <div style="margin-top:6px;font-size:.75rem;color:var(--ink-pale)">Format EPUB uniquement</div>
     </div>
     <input type="file" id="file-input" accept=".epub" multiple onchange="handleFiles(this.files)">
@@ -257,394 +303,584 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <div id="toast"></div>
 
 <script>
-const S={books:[],curBook:null,fontSize:100,selTxt:'',quotes:[],_sha:null,_booksSha:null,cfg:{},book:null,rendition:null,toc:[]};
-const $=id=>document.getElementById(id);
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const S = {
+  books: [], curBook: null, fontSize: 100, selTxt: '', quotes: [],
+  _quotesDriveId: null, _booksDriveId: null,
+  cfg: {}, book: null, rendition: null, toc: [],
+  accessToken: null, folderId: null,
+  user: null  // { name, email, picture }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function toast(msg,ms=2800){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)}
-function view(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));$(id).classList.add('on')}
-function fmtDate(iso){if(!iso)return'';const d=new Date(iso);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function toast(msg, ms = 2800) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+function view(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  $(id).classList.add('on');
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+function setDriveStatus(ok, txt) {
+  const el = $('drive-status');
+  el.style.display = 'flex';
+  el.className = 'drive-status ' + (ok ? 'ok' : 'err');
+  $('drive-status-txt').textContent = txt || 'Drive';
+}
 
-// CONFIG
-function loadCfg(){try{S.cfg=JSON.parse(localStorage.getItem('liseuse_cfg')||'{}')}catch(e){}}
-function saveConfig(){
-  S.cfg={token:$('cfg-token').value.trim(),user:$('cfg-user').value.trim(),repo:$('cfg-repo').value.trim(),branch:$('cfg-branch').value.trim()||'main'};
-  if(!S.cfg.token||!S.cfg.user||!S.cfg.repo){toast('Remplissez tous les champs');return}
-  localStorage.setItem('liseuse_cfg',JSON.stringify(S.cfg));
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+function loadCfg() {
+  try { S.cfg = JSON.parse(localStorage.getItem('liseuse_cfg_v5') || '{}'); } catch (e) {}
+}
+function saveSetup() {
+  const clientId = $('cfg-clientid').value.trim();
+  const folder = $('cfg-folder').value.trim() || 'Liseuse';
+  if (!clientId) { toast('Renseignez votre Client ID Google'); return; }
+  if (!clientId.includes('.apps.googleusercontent.com')) {
+    toast('Format de Client ID invalide'); return;
+  }
+  S.cfg = { clientId, folder };
+  localStorage.setItem('liseuse_cfg_v5', JSON.stringify(S.cfg));
   toast('Configuration sauvegardée ✓');
-  goLib();loadBooks();loadQuotesGH();
+  initGIS();
+  view('view-login');
 }
-function fillCfg(){$('cfg-token').value=S.cfg.token||'';$('cfg-user').value=S.cfg.user||'';$('cfg-repo').value=S.cfg.repo||'';$('cfg-branch').value=S.cfg.branch||'main'}
-function goCfg(){fillCfg();view('view-cfg');$('btn-lib').style.display='inline-block';$('btn-qhdr').style.display='none'}
-
-// GITHUB API
-const GH_QUOTES='citations.json';const GH_BOOKS='books.json';
-function ghH(){return{'Authorization':'token '+S.cfg.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'}}
-function ghUrl(f,branch){const b=branch||S.cfg.branch||'main';return`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/contents/${f}?ref=${b}`}
-
-async function ghGet(path){
-  const r=await fetch(ghUrl(path),{headers:ghH()});
-  if(r.status===404)return null;
-  if(!r.ok)throw new Error('GitHub '+r.status);
-  return await r.json();
-}
-async function ghPut(path,content,sha,msg){
-  const body={message:msg||'update',content:btoa(unescape(encodeURIComponent(JSON.stringify(content,null,2)))),branch:S.cfg.branch||'main'};
-  if(sha)body.sha=sha;
-  const r=await fetch(ghUrl(path),{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
-  if(!r.ok){const e=await r.json();throw new Error(e.message);}
-  return await r.json();
+function goCfg() {
+  $('cfg-clientid').value = S.cfg.clientId || '';
+  $('cfg-folder').value = S.cfg.folder || 'Liseuse';
+  view('view-cfg');
+  $('btn-cfg').style.display = 'none';
+  $('btn-logout').style.display = 'none';
 }
 
-// BOOKS
-async function loadBooks(){
-  try{
-    const d=await ghGet(GH_BOOKS);
-    if(!d){S.books=[];renderGrid();return;}
-    try{
-      const raw=atob(d.content.replace(/\n/g,''));
-      S.books=JSON.parse(decodeURIComponent(escape(raw)));
-    }catch(e){
-      S.books=JSON.parse(atob(d.content.replace(/\n/g,'')));
+// ─── GOOGLE IDENTITY SERVICES ─────────────────────────────────────────────────
+let tokenClient = null;
+
+function initGIS() {
+  if (!S.cfg.clientId) return;
+  if (typeof google === 'undefined') {
+    // GIS pas encore chargé, réessayer
+    setTimeout(initGIS, 300); return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: S.cfg.clientId,
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+    callback: async (resp) => {
+      if (resp.error) { toast('Erreur OAuth : ' + resp.error); return; }
+      S.accessToken = resp.access_token;
+      // Récupérer le profil
+      await fetchUserProfile();
+      // Initialiser le dossier Drive
+      await initDriveFolder();
+      // Afficher la bibliothèque
+      showLibUI();
+      await loadBooks();
+      await loadQuotesDrive();
     }
-    S._booksSha=d.sha;
-  }catch(e){S.books=[];}
+  });
+}
+
+function signIn() {
+  if (!S.cfg.clientId) { toast('Configurez le Client ID d\'abord'); goCfg(); return; }
+  if (!tokenClient) { initGIS(); setTimeout(signIn, 500); return; }
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function signOut() {
+  if (S.accessToken) {
+    google.accounts.oauth2.revoke(S.accessToken, () => {});
+  }
+  S.accessToken = null; S.folderId = null; S.user = null;
+  S.books = []; S.quotes = []; S._quotesDriveId = null; S._booksDriveId = null;
+  if (S.rendition) { S.rendition.destroy(); S.rendition = null; }
+  // Masquer éléments header
+  $('btn-lib').style.display = 'none';
+  $('btn-qhdr').style.display = 'none';
+  $('btn-cfg').style.display = 'none';
+  $('btn-logout').style.display = 'none';
+  $('user-badge').style.display = 'none';
+  $('drive-status').style.display = 'none';
+  view('view-login');
+}
+
+async function fetchUserProfile() {
+  try {
+    const r = await driveReq('https://www.googleapis.com/oauth2/v2/userinfo');
+    S.user = { name: r.given_name || r.name, email: r.email, picture: r.picture };
+    $('user-name').textContent = S.user.name;
+    $('user-avatar').src = S.user.picture;
+    $('user-badge').style.display = 'flex';
+  } catch (e) {
+    console.warn('Profil non récupéré', e);
+  }
+}
+
+function showLibUI() {
+  $('btn-lib').style.display = 'none';
+  $('btn-qhdr').style.display = 'none';
+  $('btn-cfg').style.display = 'inline-block';
+  $('btn-logout').style.display = 'inline-block';
+  view('view-lib');
+}
+
+// ─── DRIVE API ────────────────────────────────────────────────────────────────
+async function driveReq(url, opts = {}) {
+  const headers = { 'Authorization': 'Bearer ' + S.accessToken, ...(opts.headers || {}) };
+  const r = await fetch(url, { ...opts, headers });
+  if (r.status === 401) { toast('Session expirée, reconnectez-vous'); signOut(); throw new Error('401'); }
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error((e.error && e.error.message) || r.status);
+  }
+  return r.json();
+}
+
+async function driveReqRaw(url, opts = {}) {
+  const headers = { 'Authorization': 'Bearer ' + S.accessToken, ...(opts.headers || {}) };
+  const r = await fetch(url, { ...opts, headers });
+  if (r.status === 401) { toast('Session expirée, reconnectez-vous'); signOut(); throw new Error('401'); }
+  if (!r.ok) throw new Error(r.status);
+  return r;
+}
+
+// Trouver ou créer le dossier racine Liseuse
+async function initDriveFolder() {
+  const name = S.cfg.folder || 'Liseuse';
+  setDriveStatus(false, 'Connexion…');
+  try {
+    // Chercher dossier existant
+    const q = `mimeType='application/vnd.google-apps.folder' and name='${name}' and trashed=false`;
+    const res = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+    if (res.files && res.files.length > 0) {
+      S.folderId = res.files[0].id;
+    } else {
+      // Créer le dossier
+      const created = await driveReq('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' })
+      });
+      S.folderId = created.id;
+    }
+    // Créer sous-dossier books si nécessaire
+    const q2 = `mimeType='application/vnd.google-apps.folder' and name='books' and '${S.folderId}' in parents and trashed=false`;
+    const res2 = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q2)}&fields=files(id)`);
+    if (!res2.files || res2.files.length === 0) {
+      await driveReq('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'books', mimeType: 'application/vnd.google-apps.folder', parents: [S.folderId] })
+      });
+    }
+    setDriveStatus(true, 'Drive OK');
+  } catch (e) {
+    setDriveStatus(false, 'Drive KO');
+    toast('Erreur Drive : ' + e.message);
+  }
+}
+
+// ─── FICHIERS JSON (index livres + citations) ─────────────────────────────────
+async function driveGetJson(filename) {
+  try {
+    const q = `name='${filename}' and '${S.folderId}' in parents and trashed=false`;
+    const res = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+    if (!res.files || res.files.length === 0) return { data: null, id: null };
+    const fileId = res.files[0].id;
+    const r = await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+    const data = await r.json();
+    return { data, id: fileId };
+  } catch (e) { return { data: null, id: null }; }
+}
+
+async function driveSaveJson(filename, data, existingId) {
+  const content = JSON.stringify(data, null, 2);
+  const blob = new Blob([content], { type: 'application/json' });
+  if (existingId) {
+    // Update
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({})], { type: 'application/json' }));
+    form.append('file', blob);
+    const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + S.accessToken },
+      body: form
+    });
+    if (!r.ok) throw new Error(r.status);
+    return existingId;
+  } else {
+    // Create
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({ name: filename, parents: [S.folderId] })], { type: 'application/json' }));
+    form.append('file', blob);
+    const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + S.accessToken },
+      body: form
+    });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    return j.id;
+  }
+}
+
+// ─── LIVRES ───────────────────────────────────────────────────────────────────
+async function loadBooks() {
+  try {
+    const { data, id } = await driveGetJson('books.json');
+    S.books = Array.isArray(data) ? data : [];
+    S._booksDriveId = id;
+  } catch (e) { S.books = []; }
   renderGrid();
 }
-async function saveBooks(){
-  try{
-    const d=await fetch(ghUrl(GH_BOOKS),{method:'PUT',headers:ghH(),body:JSON.stringify({
-      message:'Mise à jour bibliothèque',
-      content:btoa(unescape(encodeURIComponent(JSON.stringify(S.books,null,2)))),
-      branch:S.cfg.branch||'main',
-      ...(S._booksSha&&{sha:S._booksSha})
-    })});
-    if(d.ok){const j=await d.json();S._booksSha=j.content.sha;}
-  }catch(e){toast('Erreur catalogue : '+e.message);}
+
+async function saveBooks() {
+  try {
+    S._booksDriveId = await driveSaveJson('books.json', S.books, S._booksDriveId);
+  } catch (e) { toast('Erreur catalogue : ' + e.message); }
 }
 
-function goLib(){view('view-lib');$('btn-lib').style.display='none';$('btn-qhdr').style.display='none';if(S.rendition){S.rendition.destroy();S.rendition=null;}renderGrid()}
-function filterBooks(){renderGrid($('lib-search').value.toLowerCase())}
-function renderGrid(q=''){
-  const grid=$('books-grid');
-  const list=q?S.books.filter(b=>b.title.toLowerCase().includes(q)):S.books;
-  if(!list.length){grid.innerHTML='<div class="empty-lib"><div class="ei">📚</div>Aucun livre. Glissez un fichier .epub ci-dessus.</div>';return}
-  const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-  grid.innerHTML=list.map(b=>{
-    const p=prog[b.id]||{pct:0};
-    return`<div class="bcard" onclick="openBook('${b.id}')">
+function goLib() {
+  view('view-lib');
+  $('btn-lib').style.display = 'none';
+  $('btn-qhdr').style.display = 'none';
+  if (S.rendition) { S.rendition.destroy(); S.rendition = null; }
+  renderGrid();
+}
+
+function filterBooks() { renderGrid($('lib-search').value.toLowerCase()); }
+
+function renderGrid(q = '') {
+  const grid = $('books-grid');
+  const list = q ? S.books.filter(b => b.title.toLowerCase().includes(q)) : S.books;
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-lib"><div class="ei">📚</div>Aucun livre. Glissez un fichier .epub ci-dessus.</div>';
+    return;
+  }
+  const prog = JSON.parse(localStorage.getItem('liseuse_prog') || '{}');
+  grid.innerHTML = list.map(b => {
+    const p = prog[b.id] || { pct: 0 };
+    return `<div class="bcard" onclick="openBook('${b.id}')">
       <div class="bcard-spine"></div>
       <button class="bcard-del" onclick="event.stopPropagation();delBook('${b.id}')" title="Supprimer">✕</button>
       <div class="bcard-ico">📖</div>
       <div class="bcard-title">${esc(b.title)}</div>
       <div class="bcard-meta">EPUB</div>
-      <div class="bcard-prog"><div class="bcard-bar" style="width:${p.pct||0}%"></div></div>
+      <div class="bcard-prog"><div class="bcard-bar" style="width:${p.pct || 0}%"></div></div>
     </div>`;
   }).join('');
 }
-async function delBook(id){
-  if(!confirm('Supprimer ce livre ?'))return;
-  S.books=S.books.filter(b=>b.id!==id);
-  await saveBooks();renderGrid();toast('Livre supprimé');
+
+async function delBook(id) {
+  const book = S.books.find(b => b.id === id);
+  if (!confirm('Supprimer ce livre ?')) return;
+  // Supprimer le fichier EPUB sur Drive
+  if (book && book.driveFileId) {
+    try {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + S.accessToken }
+      });
+    } catch (e) { console.warn('Suppression Drive échouée', e); }
+  }
+  S.books = S.books.filter(b => b.id !== id);
+  await saveBooks(); renderGrid(); toast('Livre supprimé');
 }
 
-// UPLOAD EPUB → GITHUB
-function dragOver(e){e.preventDefault();$('upload-zone').classList.add('drag')}
-function dragLeave(){$('upload-zone').classList.remove('drag')}
-function dropFile(e){e.preventDefault();$('upload-zone').classList.remove('drag');handleFiles(e.dataTransfer.files)}
-function handleFiles(files){for(const f of files){if(f.name.toLowerCase().endsWith('.epub'))uploadEpub(f);else toast('Format non supporté — EPUB uniquement')}}
-
-function cleanFilename(name){
-  return name
-    .replace(/[àâä]/g,'a').replace(/[éèêë]/g,'e').replace(/[îï]/g,'i')
-    .replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/ç/g,'c')
-    .replace(/[ÀÂÄ]/g,'A').replace(/[ÉÈÊË]/g,'E').replace(/[ÎÏ]/g,'I')
-    .replace(/[ÔÖ]/g,'O').replace(/[ÙÛÜ]/g,'U').replace(/Ç/g,'C')
-    .replace(/[^a-zA-Z0-9._-]/g,'_');
+// ─── UPLOAD EPUB → DRIVE ──────────────────────────────────────────────────────
+function dragOver(e) { e.preventDefault(); $('upload-zone').classList.add('drag'); }
+function dragLeave() { $('upload-zone').classList.remove('drag'); }
+function dropFile(e) { e.preventDefault(); $('upload-zone').classList.remove('drag'); handleFiles(e.dataTransfer.files); }
+function handleFiles(files) {
+  for (const f of files) {
+    if (f.name.toLowerCase().endsWith('.epub')) uploadEpub(f);
+    else toast('Format non supporté — EPUB uniquement');
+  }
 }
 
-async function uploadEpub(file){
-  if(!S.cfg.token){toast('Configurez GitHub d\'abord');return;}
+async function uploadEpub(file) {
+  if (!S.accessToken) { toast('Connectez-vous d\'abord'); return; }
   toast('Upload en cours…');
-  try{
-    const filename=cleanFilename(file.name);
-    const path='books/'+filename;
-    // Lire le titre depuis l'EPUB
-    const title=await getEpubTitle(file)||file.name.replace(/\.epub$/i,'');
-    // Lire en base64
-    const b64=await fileToBase64(file);
-    // Vérifier sha existant
-    let sha=undefined;
-    try{const ex=await fetch(ghUrl(path),{headers:ghH()});if(ex.ok){const d=await ex.json();sha=d.sha;}}catch(e){}
-    // Upload binaire direct (pas d'encodeURIComponent pour les binaires)
-    const body={message:'Ajout : '+title,content:b64,branch:S.cfg.branch||'main'};
-    if(sha)body.sha=sha;
-    const r=await fetch(ghUrl(path),{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
-    if(!r.ok){const e=await r.json();throw new Error(e.message);}
-    const id='gh_'+Date.now();
-    S.books.unshift({id,title,filename,path});
-    await saveBooks();renderGrid();
+  try {
+    const title = await getEpubTitle(file) || file.name.replace(/\.epub$/i, '');
+    // Trouver le sous-dossier books
+    const q = `mimeType='application/vnd.google-apps.folder' and name='books' and '${S.folderId}' in parents and trashed=false`;
+    const res = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
+    const booksFolderId = (res.files && res.files.length > 0) ? res.files[0].id : S.folderId;
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({
+      name: file.name,
+      parents: [booksFolderId]
+    })], { type: 'application/json' }));
+    form.append('file', file, file.name);
+
+    const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + S.accessToken },
+      body: form
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || r.status); }
+    const j = await r.json();
+
+    const id = 'drv_' + Date.now();
+    S.books.unshift({ id, title, filename: file.name, driveFileId: j.id });
+    await saveBooks(); renderGrid();
     toast(`« ${title} » uploadé ✓`);
-  }catch(e){toast('Erreur upload : '+e.message);}
+  } catch (e) { toast('Erreur upload : ' + e.message); }
 }
 
-function fileToBase64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=e=>res(e.target.result.split(',')[1]);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
+async function getEpubTitle(file) {
+  try {
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+    let opfPath = null;
+    const container = zip.file('META-INF/container.xml');
+    if (container) {
+      const xml = await container.async('string');
+      const m = xml.match(/full-path="([^"]+\.opf)"/i);
+      if (m) opfPath = m[1];
+    }
+    if (!opfPath) return null;
+    const opf = await zip.file(opfPath).async('string');
+    const m = opf.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
+    if (!m) return null;
+    try { return decodeURIComponent(escape(m[1].trim())); } catch (e) { return m[1].trim(); }
+  } catch (e) { return null; }
 }
 
-async function getEpubTitle(file){
-  try{
-    const buf=await file.arrayBuffer();
-    const zip=await JSZip.loadAsync(buf);
-    let opfPath=null;
-    const container=zip.file('META-INF/container.xml');
-    if(container){const xml=await container.async('string');const m=xml.match(/full-path="([^"]+\.opf)"/i);if(m)opfPath=m[1];}
-    if(!opfPath)return null;
-    const opf=await zip.file(opfPath).async('string');
-    const m=opf.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
-    if(!m)return null;
-    // Forcer décodage UTF-8
-    try{return decodeURIComponent(escape(m[1].trim()));}catch(e){return m[1].trim();}
-  }catch(e){return null;}
-}
-
-// OPEN BOOK avec epub.js
-async function openBook(id){
-  const book=S.books.find(b=>b.id===id);if(!book)return;
+// ─── OUVRIR UN LIVRE ──────────────────────────────────────────────────────────
+async function openBook(id) {
+  const book = S.books.find(b => b.id === id); if (!book) return;
+  if (!book.driveFileId) { toast('ID Drive manquant pour ce livre'); return; }
   toast('Chargement…');
-  try{
-    // Récupérer le sha du fichier via l'API tree (fonctionne même pour > 1Mo)
-    const branch=S.cfg.branch||'main';
-    const treeUrl=`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/git/trees/${branch}?recursive=1`;
-    const treeResp=await fetch(treeUrl,{headers:ghH()});
-    if(!treeResp.ok)throw new Error('Erreur API tree ('+treeResp.status+')');
-    const treeData=await treeResp.json();
-    const entry=treeData.tree.find(f=>f.path===book.path);
-    if(!entry)throw new Error('Fichier introuvable dans le repo');
+  try {
+    const r = await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}?alt=media`);
+    const arrayBuf = await r.arrayBuffer();
 
-    // Télécharger via l'API Git Blobs en mode raw
-    const blobUrl=`https://api.github.com/repos/${S.cfg.user}/${S.cfg.repo}/git/blobs/${entry.sha}`;
-    const r=await fetch(blobUrl,{headers:{...ghH(),'Accept':'application/vnd.github.raw+json'}});
-    if(!r.ok)throw new Error('Erreur téléchargement blob ('+r.status+')');
-    const arrayBuf=await r.arrayBuffer();
+    if (S.rendition) { S.rendition.destroy(); S.rendition = null; }
+    $('epub-viewer').innerHTML = '';
+    S.curBook = book;
+    $('rbook-title').textContent = book.title;
+    $('btn-lib').style.display = 'inline-block';
+    $('btn-qhdr').style.display = 'inline-block';
 
-    // Détruire l'ancien rendition si existant
-    if(S.rendition){S.rendition.destroy();S.rendition=null;}
-    $('epub-viewer').innerHTML='';
-
-    S.curBook=book;
-    $('rbook-title').textContent=book.title;
-    $('btn-lib').style.display='inline-block';
-    $('btn-qhdr').style.display='inline-block';
-
-    // Afficher la vue AVANT de lire les dimensions (sinon clientWidth/Height = 0 car display:none)
     view('view-reader');
-    await new Promise(r=>requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(r));
 
-    // Créer le livre epub.js
-    S.book=ePub(arrayBuf);
+    S.book = ePub(arrayBuf);
     await S.book.ready;
 
-    // Table des matières
-    const toc=await S.book.loaded.navigation;
-    S.toc=toc.toc||[];
+    const toc = await S.book.loaded.navigation;
+    S.toc = toc.toc || [];
     renderToc(S.toc);
 
-    // Créer le rendition avec les vraies dimensions du conteneur
-    const wrap=$('epub-wrap');
-    const w=wrap.clientWidth;
-    const h=wrap.clientHeight;
-
-    S.rendition=S.book.renderTo('epub-viewer',{
-      width:w,
-      height:h,
-      spread:'none',
-      flow:'paginated'
+    const wrap = $('epub-wrap');
+    S.rendition = S.book.renderTo('epub-viewer', {
+      width: wrap.clientWidth, height: wrap.clientHeight,
+      spread: 'none', flow: 'paginated'
     });
 
-    S.rendition.themes.register('liseuse',{
-      body:{
-        'font-family':'"Crimson Pro", Georgia, serif !important',
-        'font-size':'1.05em !important',
-        'line-height':'1.85 !important',
-        'color':'#1a1208 !important',
-        'background':'#faf8f4 !important'
+    S.rendition.themes.register('liseuse', {
+      body: {
+        'font-family': '"Crimson Pro", Georgia, serif !important',
+        'font-size': '1.05em !important', 'line-height': '1.85 !important',
+        'color': '#1a1208 !important', 'background': '#faf8f4 !important'
       },
-      p:{'text-align':'justify !important'}
+      p: { 'text-align': 'justify !important' }
     });
     S.rendition.themes.select('liseuse');
 
-    const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-    const saved=prog[id];
-    if(saved&&saved.cfi)await S.rendition.display(saved.cfi);
+    const prog = JSON.parse(localStorage.getItem('liseuse_prog') || '{}');
+    const saved = prog[id];
+    if (saved && saved.cfi) await S.rendition.display(saved.cfi);
     else await S.rendition.display();
 
-    // Ré-appliquer la taille de police à chaque nouveau chapitre rendu
-    S.rendition.on('rendered',()=>applyFontSize());
-
-    // Écouter les changements de page
-    S.rendition.on('relocated',loc=>{
-      const pct=S.book.locations.percentageFromCfi(loc.start.cfi);
-      $('epub-progress-bar').style.width=(Math.round(pct*100)||0)+'%';
-      const p=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-      p[id]={cfi:loc.start.cfi,pct:Math.round(pct*100)};
-      localStorage.setItem('liseuse_prog',JSON.stringify(p));
+    S.rendition.on('rendered', () => applyFontSize());
+    S.rendition.on('relocated', loc => {
+      const pct = S.book.locations.percentageFromCfi(loc.start.cfi);
+      $('epub-progress-bar').style.width = (Math.round(pct * 100) || 0) + '%';
+      const p = JSON.parse(localStorage.getItem('liseuse_prog') || '{}');
+      p[id] = { cfi: loc.start.cfi, pct: Math.round(pct * 100) };
+      localStorage.setItem('liseuse_prog', JSON.stringify(p));
       highlightToc(loc.start.href);
     });
     S.book.locations.generate(1000);
-
     renderQPanel();
     toast('');
-  }catch(e){toast('Erreur : '+e.message);console.error(e);}
+  } catch (e) { toast('Erreur : ' + e.message); console.error(e); }
 }
 
-function renderToc(toc,level=0){
-  if(!level)$('toc-list').innerHTML='';
-  for(const item of toc){
-    const div=document.createElement('div');
-    div.className='toc-item'+(level?' sub':'');
-    div.textContent=item.label.trim();
-    div.onclick=()=>{S.rendition.display(item.href);closePanels();};
-    div.dataset.href=item.href;
+function renderToc(toc, level = 0) {
+  if (!level) $('toc-list').innerHTML = '';
+  for (const item of toc) {
+    const div = document.createElement('div');
+    div.className = 'toc-item' + (level ? ' sub' : '');
+    div.textContent = item.label.trim();
+    div.onclick = () => { S.rendition.display(item.href); closePanels(); };
+    div.dataset.href = item.href;
     $('toc-list').appendChild(div);
-    if(item.subitems&&item.subitems.length)renderToc(item.subitems,level+1);
+    if (item.subitems && item.subitems.length) renderToc(item.subitems, level + 1);
   }
 }
-
-function highlightToc(href){
-  document.querySelectorAll('.toc-item').forEach(el=>{
-    el.classList.toggle('on',!!(href&&el.dataset.href&&href.includes(el.dataset.href)));
+function highlightToc(href) {
+  document.querySelectorAll('.toc-item').forEach(el => {
+    el.classList.toggle('on', !!(href && el.dataset.href && href.includes(el.dataset.href)));
   });
 }
+function epubPrev() { if (S.rendition) S.rendition.prev(); }
+function epubNext() { if (S.rendition) S.rendition.next(); }
 
-function epubPrev(){if(S.rendition)S.rendition.prev()}
-function epubNext(){if(S.rendition)S.rendition.next()}
-
-// Navigation clavier + swipe
-document.addEventListener('keydown',e=>{
-  if($('view-reader').classList.contains('on')&&!$('modal-bg').classList.contains('open')){
-    if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();epubNext()}
-    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();epubPrev()}
+document.addEventListener('keydown', e => {
+  if ($('view-reader').classList.contains('on') && !$('modal-bg').classList.contains('open')) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); epubNext(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); epubPrev(); }
   }
-  if(e.key==='Escape'){closeModal();closePanels()}
+  if (e.key === 'Escape') { closeModal(); closePanels(); }
 });
-
-// Resize
-window.addEventListener('resize',()=>{
-  if(S.rendition&&$('view-reader').classList.contains('on')){
-    const wrap=$('epub-wrap');
+window.addEventListener('resize', () => {
+  if (S.rendition && $('view-reader').classList.contains('on')) {
+    const wrap = $('epub-wrap');
     S.rendition.resize(wrap.clientWidth, wrap.clientHeight);
   }
 });
-
-// Swipe mobile
-let touchX=0;
-document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX},{passive:true});
-document.addEventListener('touchend',e=>{
-  if(!$('view-reader').classList.contains('on'))return;
-  const dx=e.changedTouches[0].clientX-touchX;
-  if(Math.abs(dx)>60){if(dx<0)epubNext();else epubPrev();}
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (!$('view-reader').classList.contains('on')) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 60) { if (dx < 0) epubNext(); else epubPrev(); }
 });
 
-function applyFontSize(){
-  if(!S.rendition)return;
-  S.rendition.getContents().forEach(c=>{
-    c.document.documentElement.style.fontSize=S.fontSize+'%';
+function applyFontSize() {
+  if (!S.rendition) return;
+  S.rendition.getContents().forEach(c => {
+    c.document.documentElement.style.fontSize = S.fontSize + '%';
   });
 }
-function chFont(d){
-  S.fontSize=Math.max(80,Math.min(150,S.fontSize+(d*10)));
-  $('font-sz').textContent=S.fontSize+'%';
+function chFont(d) {
+  S.fontSize = Math.max(80, Math.min(150, S.fontSize + (d * 10)));
+  $('font-sz').textContent = S.fontSize + '%';
   applyFontSize();
 }
 
-// CITATIONS
-function tryQuote(){
-  if(!S.rendition){toast('Ouvrez un livre d\'abord');return;}
-  const contents=S.rendition.getContents();
-  let sel='';
-  for(const c of contents){
-    const s=c.window.getSelection();
-    if(s&&s.toString().trim()){sel=s.toString().trim();break;}
+// ─── CITATIONS ────────────────────────────────────────────────────────────────
+function tryQuote() {
+  if (!S.rendition) { toast('Ouvrez un livre d\'abord'); return; }
+  const contents = S.rendition.getContents();
+  let sel = '';
+  for (const c of contents) {
+    const s = c.window.getSelection();
+    if (s && s.toString().trim()) { sel = s.toString().trim(); break; }
   }
-  if(!sel){toast('Sélectionnez du texte dans le livre');return;}
-  S.selTxt=sel;
-  $('modal-exc').textContent=sel.substring(0,500)+(sel.length>500?'…':'');
-  $('modal-note').value='';
+  if (!sel) { toast('Sélectionnez du texte dans le livre'); return; }
+  S.selTxt = sel;
+  $('modal-exc').textContent = sel.substring(0, 500) + (sel.length > 500 ? '…' : '');
+  $('modal-note').value = '';
   $('modal-bg').classList.add('open');
-  setTimeout(()=>$('modal-note').focus(),100);
+  setTimeout(() => $('modal-note').focus(), 100);
 }
-function closeModal(){$('modal-bg').classList.remove('open')}
+function closeModal() { $('modal-bg').classList.remove('open'); }
 
-async function commitQ(){
-  const note=$('modal-note').value.trim();
-  const chTitle=document.querySelector('.toc-item.on')?document.querySelector('.toc-item.on').textContent:'—';
-  const q={id:Date.now()+'_'+Math.random().toString(36).slice(2,7),date:new Date().toISOString(),bookId:S.curBook.id,book:S.curBook.title,chapter:chTitle,text:S.selTxt,note};
-  S.quotes.unshift(q);closeModal();renderQPanel();
-  const ok=await saveQuotesGH();
-  toast(ok?'Citation sauvegardée ✓':'Erreur sauvegarde GitHub');
+async function commitQ() {
+  const note = $('modal-note').value.trim();
+  const chTitle = document.querySelector('.toc-item.on') ? document.querySelector('.toc-item.on').textContent : '—';
+  const q = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    date: new Date().toISOString(),
+    bookId: S.curBook.id, book: S.curBook.title,
+    chapter: chTitle, text: S.selTxt, note
+  };
+  S.quotes.unshift(q); closeModal(); renderQPanel();
+  const ok = await saveQuotesDrive();
+  toast(ok ? 'Citation sauvegardée ✓' : 'Erreur sauvegarde Drive');
 }
-async function delQ(id){S.quotes=S.quotes.filter(q=>q.id!==id);renderQPanel();await saveQuotesGH();toast('Supprimée')}
+async function delQ(id) {
+  S.quotes = S.quotes.filter(q => q.id !== id);
+  renderQPanel(); await saveQuotesDrive(); toast('Supprimée');
+}
 
-function renderQPanel(){
-  const list=S.curBook?S.quotes.filter(q=>q.bookId===S.curBook.id):S.quotes;
-  $('qp-cnt').textContent=list.length?`(${list.length})`:'';
-  if(!list.length){$('qlist').innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--ink-pale);font-size:.82rem">Aucune citation.<br><br>Sélectionnez du texte<br>puis cliquez sur ❝</div>';return}
-  $('qlist').innerHTML=list.map(q=>`
+function renderQPanel() {
+  const list = S.curBook ? S.quotes.filter(q => q.bookId === S.curBook.id) : S.quotes;
+  $('qp-cnt').textContent = list.length ? `(${list.length})` : '';
+  if (!list.length) {
+    $('qlist').innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--ink-pale);font-size:.82rem">Aucune citation.<br><br>Sélectionnez du texte<br>puis cliquez sur ❝</div>';
+    return;
+  }
+  $('qlist').innerHTML = list.map(q => `
     <div class="qcard">
       <button class="qdel" onclick="delQ('${q.id}')">✕</button>
       <div class="qtxt">${esc(q.text)}</div>
       <div class="qmeta">${esc(q.chapter)}<br>${fmtDate(q.date)}</div>
-      ${q.note?`<div class="qnote">📝 ${esc(q.note)}</div>`:''}
+      ${q.note ? `<div class="qnote">📝 ${esc(q.note)}</div>` : ''}
     </div>`).join('');
 }
 
-function exportQ(){
-  const list=S.curBook?S.quotes.filter(q=>q.bookId===S.curBook.id):S.quotes;
-  if(!list.length){toast('Aucune citation');return}
-  const txt=list.map(q=>`[${q.book} — ${q.chapter}] ${fmtDate(q.date)}\n"${q.text}"${q.note?'\n📝 '+q.note:''}`).join('\n\n───────────────────\n\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download=`citations_${S.curBook?S.curBook.title:'export'}.txt`;a.click();
+function exportQ() {
+  const list = S.curBook ? S.quotes.filter(q => q.bookId === S.curBook.id) : S.quotes;
+  if (!list.length) { toast('Aucune citation'); return; }
+  const txt = list.map(q =>
+    `[${q.book} — ${q.chapter}] ${fmtDate(q.date)}\n"${q.text}"${q.note ? '\n📝 ' + q.note : ''}`
+  ).join('\n\n───────────────────\n\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+  a.download = `citations_${S.curBook ? S.curBook.title : 'export'}.txt`;
+  a.click();
 }
 
-// GITHUB QUOTES
-async function loadQuotesGH(){
-  if(!S.cfg.token)return;
-  try{
-    const d=await ghGet(GH_QUOTES);
-    if(!d){S.quotes=[];return;}
-    const raw=atob(d.content.replace(/\n/g,''));
-    try{S.quotes=JSON.parse(decodeURIComponent(escape(raw)));}catch(e){S.quotes=JSON.parse(raw);}
-    S._sha=d.sha;
-  }catch(e){S.quotes=[];}
+async function loadQuotesDrive() {
+  if (!S.accessToken) return;
+  try {
+    const { data, id } = await driveGetJson('citations.json');
+    S.quotes = Array.isArray(data) ? data : [];
+    S._quotesDriveId = id;
+  } catch (e) { S.quotes = []; }
   renderQPanel();
 }
-async function saveQuotesGH(){
-  if(!S.cfg.token)return false;
-  try{
-    const content=btoa(unescape(encodeURIComponent(JSON.stringify(S.quotes,null,2))));
-    const body={message:'Mise à jour citations',content,branch:S.cfg.branch||'main'};
-    if(S._sha)body.sha=S._sha;
-    const r=await fetch(ghUrl(GH_QUOTES),{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
-    if(!r.ok){const e=await r.json();throw new Error(e.message);}
-    const d=await r.json();S._sha=d.content.sha;return true;
-  }catch(e){toast('Erreur GitHub : '+e.message);return false;}
+async function saveQuotesDrive() {
+  if (!S.accessToken) return false;
+  try {
+    S._quotesDriveId = await driveSaveJson('citations.json', S.quotes, S._quotesDriveId);
+    return true;
+  } catch (e) { toast('Erreur Drive : ' + e.message); return false; }
 }
 
-// PANELS
-function toggleSidebar(){const s=$('sidebar'),o=$('overlay');if(s.classList.toggle('open'))o.classList.add('show');else o.classList.remove('show')}
-function toggleQuotes(){const p=$('qpanel'),o=$('overlay');if(p.classList.toggle('open'))o.classList.add('show');else o.classList.remove('show');if(p.classList.contains('open'))renderQPanel()}
-function closePanels(){$('sidebar').classList.remove('open');$('qpanel').classList.remove('open');$('overlay').classList.remove('show')}
-$('modal-note').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)commitQ()});
+// ─── PANELS ───────────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const s = $('sidebar'), o = $('overlay');
+  if (s.classList.toggle('open')) o.classList.add('show'); else o.classList.remove('show');
+}
+function toggleQuotes() {
+  const p = $('qpanel'), o = $('overlay');
+  if (p.classList.toggle('open')) o.classList.add('show'); else o.classList.remove('show');
+  if (p.classList.contains('open')) renderQPanel();
+}
+function closePanels() {
+  $('sidebar').classList.remove('open');
+  $('qpanel').classList.remove('open');
+  $('overlay').classList.remove('show');
+}
+$('modal-note').addEventListener('keydown', e => { if (e.key === 'Enter' && e.ctrlKey) commitQ(); });
 
-// INIT
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 loadCfg();
-if(S.cfg.token&&S.cfg.user&&S.cfg.repo){goLib();loadBooks();loadQuotesGH();}else{view('view-cfg')}
+if (S.cfg.clientId) {
+  // Config présente → écran login
+  window.addEventListener('load', () => {
+    initGIS();
+    view('view-login');
+  });
+} else {
+  // Pas de config → écran setup
+  view('view-cfg');
+}
 </script>
 </body>
 </html>
