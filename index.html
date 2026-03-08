@@ -364,40 +364,54 @@ function goCfg() {
 // ─── GOOGLE IDENTITY SERVICES ─────────────────────────────────────────────────
 let tokenClient = null;
 
-function initGIS() {
+async function onTokenReceived(resp, silent = false) {
+  if (resp.error) {
+    // Si le silent refresh échoue, afficher l'écran de login normalement
+    if (silent) { view('view-login'); return; }
+    toast('Erreur OAuth : ' + resp.error);
+    return;
+  }
+  S.accessToken = resp.access_token;
+  // Mémoriser le hint de compte pour le prochain silent refresh
+  try { localStorage.setItem('liseuse_login_hint', S.user?.email || ''); } catch(e) {}
+  await fetchUserProfile();
+  // Sauvegarder le hint après avoir récupéré le profil
+  if (S.user?.email) localStorage.setItem('liseuse_login_hint', S.user.email);
+  await initDriveFolder();
+  showLibUI();
+  await loadBooks();
+  await loadQuotesDrive();
+}
+
+function initGIS(thenSilent = false) {
   if (!S.cfg.clientId) return;
   if (typeof google === 'undefined') {
-    // GIS pas encore chargé, réessayer
-    setTimeout(initGIS, 300); return;
+    setTimeout(() => initGIS(thenSilent), 300); return;
   }
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: S.cfg.clientId,
     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-    callback: async (resp) => {
-      if (resp.error) { toast('Erreur OAuth : ' + resp.error); return; }
-      S.accessToken = resp.access_token;
-      // Récupérer le profil
-      await fetchUserProfile();
-      // Initialiser le dossier Drive
-      await initDriveFolder();
-      // Afficher la bibliothèque
-      showLibUI();
-      await loadBooks();
-      await loadQuotesDrive();
-    }
+    callback: async (resp) => { await onTokenReceived(resp, thenSilent); }
   });
+  if (thenSilent) {
+    // Tentative silencieuse : pas de popup, échoue proprement si session expirée
+    const hint = localStorage.getItem('liseuse_login_hint') || '';
+    tokenClient.requestAccessToken({ prompt: '', login_hint: hint });
+  }
 }
 
 function signIn() {
   if (!S.cfg.clientId) { toast('Configurez le Client ID d\'abord'); goCfg(); return; }
   if (!tokenClient) { initGIS(); setTimeout(signIn, 500); return; }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
+  const hint = localStorage.getItem('liseuse_login_hint') || '';
+  tokenClient.requestAccessToken({ prompt: 'select_account', login_hint: hint });
 }
 
 function signOut() {
   if (S.accessToken) {
     google.accounts.oauth2.revoke(S.accessToken, () => {});
   }
+  localStorage.removeItem('liseuse_login_hint');
   S.accessToken = null; S.folderId = null; S.user = null;
   S.books = []; S.quotes = []; S._quotesDriveId = null; S._booksDriveId = null;
   if (S.rendition) { S.rendition.destroy(); S.rendition = null; }
@@ -872,13 +886,12 @@ $('modal-note').addEventListener('keydown', e => { if (e.key === 'Enter' && e.ct
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadCfg();
 if (S.cfg.clientId) {
-  // Config présente → écran login
   window.addEventListener('load', () => {
-    initGIS();
+    // Afficher login par défaut, puis tenter un silent refresh
     view('view-login');
+    initGIS(true); // tente de se reconnecter sans popup
   });
 } else {
-  // Pas de config → écran setup
   view('view-cfg');
 }
 </script>
