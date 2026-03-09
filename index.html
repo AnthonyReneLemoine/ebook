@@ -116,6 +116,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 #epub-prev{left:2px}
 #epub-next{right:2px}
 #epub-prev:hover,#epub-next:hover{background:var(--rust);color:white;border:1px solid var(--rust);opacity:1}
+@media(hover:none){#epub-prev,#epub-next{opacity:0.5;background:rgba(250,248,244,0.7);border:1px solid var(--border)}}
 #epub-progress{position:fixed;bottom:0;left:0;right:0;height:3px;background:var(--border);z-index:120}
 #epub-progress-bar{height:100%;background:var(--rust);transition:width .3s}
 @media(min-width:900px){#sidebar{transform:translateX(0);position:fixed}#epub-wrap{margin-left:var(--sidebar-w)}#epub-prev{left:calc(var(--sidebar-w) + 2px)}}
