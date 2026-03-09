@@ -92,8 +92,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toc-item.sub{padding-left:28px;font-size:.78rem}
 
 /* Zone epub.js */
-#epub-wrap{flex:1;overflow:hidden;position:relative;background:var(--parchment)}
+#epub-wrap{flex:1;overflow:hidden;position:relative;background:var(--parchment);padding:0 42px}
 #epub-viewer{width:100%;height:100%}
+@media(max-width:500px){#epub-wrap{padding:0 32px}}
 
 /* Navigation */
 #epub-prev,#epub-next{position:fixed;top:50%;transform:translateY(-50%);width:36px;height:64px;background:rgba(250,248,244,0.92);border:1px solid var(--border);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--ink-mid);transition:all .2s;z-index:120}
@@ -485,7 +486,8 @@ async function openBook(id){
 
     // Créer le rendition avec les vraies dimensions du conteneur
     const wrap=$('epub-wrap');
-    const w=wrap.clientWidth;
+    const cs=getComputedStyle(wrap);
+    const w=wrap.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
     const h=wrap.clientHeight;
 
     S.rendition=S.book.renderTo('epub-viewer',{
@@ -584,7 +586,8 @@ document.addEventListener('keydown',e=>{
 window.addEventListener('resize',()=>{
   if(S.rendition&&$('view-reader').classList.contains('on')){
     const wrap=$('epub-wrap');
-    S.rendition.resize(wrap.clientWidth, wrap.clientHeight);
+    const cs=getComputedStyle(wrap);
+    S.rendition.resize(wrap.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),wrap.clientHeight);
   }
 });
 
