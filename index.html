@@ -167,7 +167,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="auth-box">
     <h2>Liseuse</h2>
     <div class="auth-ver">v7</div>
-    <p class="sub" id="auth-sub">Entrez votre mot de passe pour accéder à votre bibliothèque.</p>
+    <p class="sub" id="auth-sub">Connectez-vous pour accéder à votre bibliothèque.</p>
+    <div class="fg">
+      <label>Adresse e-mail</label>
+      <input type="email" id="auth-email" placeholder="vous@exemple.com" autocomplete="email" onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
     <div class="fg">
       <label id="auth-lbl">Mot de passe</label>
       <input type="password" id="auth-pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
@@ -702,20 +706,25 @@ async function hashPwd(p){
 function isAuthed(){return sessionStorage.getItem(SESSION_KEY)==='1'}
 
 async function authSubmit(){
+  const email=$('auth-email').value.trim().toLowerCase();
   const pwd=$('auth-pwd').value;
   $('auth-err').textContent='';
+  if(!email){$('auth-err').textContent='Saisissez votre adresse e-mail';$('auth-email').focus();return;}
+  if(!email.includes('@')){$('auth-err').textContent='Adresse e-mail invalide';$('auth-email').focus();return;}
   if(!pwd)return;
   const stored=localStorage.getItem(AUTH_KEY);
   if(!stored){
-    // Premier lancement : création du mot de passe
+    // Premier lancement : création du compte
     if(pwd.length<6){$('auth-err').textContent='Minimum 6 caractères';return}
     const pwd2=$('auth-pwd2').value;
     if(pwd!==pwd2){$('auth-err').textContent='Les mots de passe ne correspondent pas';return}
-    localStorage.setItem(AUTH_KEY,await hashPwd(pwd));
+    localStorage.setItem(AUTH_KEY,JSON.stringify({email,hash:await hashPwd(pwd)}));
     authSuccess();
   }else{
-    if(await hashPwd(pwd)===stored){authSuccess();}
-    else{$('auth-err').textContent='Mot de passe incorrect';$('auth-pwd').value='';$('auth-pwd').focus();}
+    const data=JSON.parse(stored);
+    if(data.email!==email){$('auth-err').textContent='E-mail ou mot de passe incorrect';return;}
+    if(await hashPwd(pwd)===data.hash){authSuccess();}
+    else{$('auth-err').textContent='E-mail ou mot de passe incorrect';$('auth-pwd').value='';$('auth-pwd').focus();}
   }
 }
 
@@ -728,20 +737,24 @@ function authSuccess(){
 function logout(){
   sessionStorage.removeItem(SESSION_KEY);
   $('view-auth').style.display='flex';
-  $('auth-pwd').value='';$('auth-err').textContent='';
+  $('auth-email').value='';$('auth-pwd').value='';$('auth-err').textContent='';
   // Réinitialiser l'état de lecture
   if(S.rendition){S.rendition.destroy();S.rendition=null;}
-  $('auth-pwd').focus();
+  $('auth-email').focus();
 }
 
 function showAuthScreen(){
-  if(!localStorage.getItem(AUTH_KEY)){
-    $('auth-sub').textContent='Première connexion — créez un mot de passe pour protéger votre liseuse.';
+  const stored=localStorage.getItem(AUTH_KEY);
+  if(!stored){
+    $('auth-sub').textContent='Première connexion — créez votre compte pour protéger votre liseuse.';
     $('auth-lbl').textContent='Choisir un mot de passe';
     $('auth-confirm-fg').style.display='block';
-    $('auth-btn').textContent='Créer le mot de passe';
+    $('auth-btn').textContent='Créer le compte';
+  }else{
+    // Pré-remplir l'email si connu
+    try{const d=JSON.parse(stored);if(d.email)$('auth-email').value=d.email;}catch(e){}
   }
-  setTimeout(()=>$('auth-pwd').focus(),100);
+  setTimeout(()=>{const em=$('auth-email');em.value?$('auth-pwd').focus():em.focus();},100);
 }
 
 function initApp(){
