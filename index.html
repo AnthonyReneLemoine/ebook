@@ -297,7 +297,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
 }
 #font-sz{font-size:.72rem;color:#9a8e7a;min-width:36px;text-align:center}
 
-/* Layout lecteur */
+/* Layout lecteur — le header global est masqué en mode reader */
 #rlayout{
   margin-top:50px;
   height:calc(100dvh - 50px - 44px);
@@ -533,7 +533,7 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
 <div id="header">
   <div id="logo" onclick="goLib()">
     <span id="logo-icon">📚</span>
-    <span>Liseuse<span id="logo-ver">v7</span></span>
+    <span>Liseuse<span id="logo-ver">v7.3</span></span>
   </div>
   <div id="hdr-r">
     <div id="drive-dot" title="Drive"></div>
@@ -787,6 +787,7 @@ window.saveSetup = () => {
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 window.goLib = () => {
   view('view-lib');
+  $('header').style.display = 'flex';
   $('btn-lib').style.display='none';
   destroyReader();
   renderGrid();
@@ -1093,8 +1094,8 @@ function resizeCover(url,maxW,maxH){
 }
 
 // ── OUVRIR UN LIVRE ───────────────────────────────────────────────────────────
-window.openBook=async id=>{
-  const book=S.books.find(b=>b.id===id);if(!book)return;
+window.openBook = async id => {
+  const book = S.books.find(b=>b.id===id); if(!book)return;
   if(!book.driveFileId){toast('ID Drive manquant pour ce livre');return;}
   toast('Chargement…');
   try{
@@ -1106,6 +1107,8 @@ window.openBook=async id=>{
     S.curBook=book;
     $('rbook-title').textContent=book.title;
     $('btn-lib').style.display='inline-block';
+    // Masquer le header global en mode lecture
+    $('header').style.display='none';
     view('view-reader');
     await new Promise(r=>requestAnimationFrame(r));
 
@@ -1165,9 +1168,10 @@ function destroyReader(){
     if(S.fView._onResize)window.removeEventListener('resize',S.fView._onResize);
     S.fView.remove();S.fView=null;
   }
-  // Reset recherche
+  $('header').style.display='flex';
   closeSearch();
   $('theme-panel').classList.remove('open');
+  setBarsVisible(true);
 }
 
 // ── TABLE DES MATIÈRES ────────────────────────────────────────────────────────
