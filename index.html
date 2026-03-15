@@ -170,7 +170,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <body>
 
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>📚</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v5</small></div>
+  <div id="logo" onclick="goLib()"><span>📚</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v5.1</small></div>
   <div id="hdr-r">
     <div id="drive-status" style="display:none"><div class="dot"></div><span id="drive-status-txt">Drive</span></div>
     <div id="user-badge" style="display:none">
@@ -703,6 +703,8 @@ async function openBook(id) {
       spread: 'none', flow: 'paginated'
     });
 
+    attachSwipeToRendition();
+
     S.rendition.themes.register('liseuse', {
       body: {
         'font-family': '"Crimson Pro", Georgia, serif !important',
@@ -766,13 +768,51 @@ window.addEventListener('resize', () => {
     S.rendition.resize(wrap.clientWidth, wrap.clientHeight);
   }
 });
-let touchX = 0;
-document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
-document.addEventListener('touchend', e => {
+// ─── SWIPE TACTILE ────────────────────────────────────────────────────────────
+// Le viewer epub.js est dans un <iframe> : les touch events n'atteignent pas
+// le document parent. On attache les listeners directement sur l'iframe ET
+// sur le wrapper pour couvrir tous les cas (marges, barre de progression…).
+
+let _swipeStartX = 0;
+let _swipeStartY = 0;
+const SWIPE_THRESHOLD = 50;   // px minimum horizontal
+const SWIPE_RATIO     = 1.5;  // doit être plus horizontal que vertical
+
+function _onSwipeStart(x, y) { _swipeStartX = x; _swipeStartY = y; }
+function _onSwipeEnd(x, y) {
   if (!$('view-reader').classList.contains('on')) return;
-  const dx = e.changedTouches[0].clientX - touchX;
-  if (Math.abs(dx) > 60) { if (dx < 0) epubNext(); else epubPrev(); }
-});
+  if ($('modal-bg').classList.contains('open')) return;
+  const dx = x - _swipeStartX;
+  const dy = y - _swipeStartY;
+  if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) * SWIPE_RATIO) {
+    if (dx < 0) epubNext(); else epubPrev();
+  }
+}
+
+// Swipe sur le document principal (marges, barre de progression, etc.)
+document.addEventListener('touchstart', e => {
+  _onSwipeStart(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  _onSwipeEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+}, { passive: true });
+
+// Swipe sur le contenu de l'iframe epub.js (là où l'utilisateur lit le texte)
+function attachSwipeToRendition() {
+  if (!S.rendition) return;
+  S.rendition.on('rendered', (section, view) => {
+    try {
+      const iframeDoc = view.document || view.contents?.document;
+      if (!iframeDoc) return;
+      iframeDoc.addEventListener('touchstart', e => {
+        _onSwipeStart(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      iframeDoc.addEventListener('touchend', e => {
+        _onSwipeEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      }, { passive: true });
+    } catch(err) { /* cross-origin safety */ }
+  });
+}
 
 function applyFontSize() {
   if (!S.rendition) return;
