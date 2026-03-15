@@ -557,7 +557,9 @@ window.openBook = async id => {
   toast('Chargement…');
   try {
     const r   = await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}?alt=media`);
-    const blob = await r.blob();           // foliate-view accepte un Blob
+    const blob = await r.blob();
+    // foliate-js détecte le format via le nom de fichier — il faut un File, pas un Blob nu
+    const epubFile = new File([blob], book.filename || 'book.epub', { type: 'application/epub+zip' });
 
     destroyReader();
     S.curBook = book;
@@ -575,7 +577,7 @@ window.openBook = async id => {
     S.fView = fv;
 
     // ── Ouvrir l'epub ──
-    await fv.open(blob);
+    await fv.open(epubFile);
 
     // ── Table des matières ──
     // foliate-js expose book.toc comme une Promise ou tableau selon la version
