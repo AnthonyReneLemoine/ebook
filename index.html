@@ -110,8 +110,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toc-item.sub{padding-left:28px;font-size:.78rem}
 
 /* foliate-view */
-#epub-wrap{flex:1;overflow:hidden;position:relative;background:var(--parchment)}
-foliate-view{width:100%;height:100%;display:block}
+#epub-wrap{flex:1;overflow:hidden;position:relative;background:var(--parchment);display:flex;flex-direction:column}
+foliate-view{flex:1;width:100%;min-height:0;display:block}
 foliate-view::part(filter){background:var(--parchment)}
 
 #epub-prev,#epub-next{position:fixed;top:50%;transform:translateY(-50%);width:36px;height:64px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--ink-mid);transition:all .2s;z-index:120;opacity:0.15}
@@ -363,7 +363,11 @@ window.goCfg = () => {
   $('btn-logout').style.display = 'none';
 };
 function destroyReader() {
-  if (S.fView) { S.fView.remove(); S.fView = null; }
+  if (S.fView) {
+    if (S.fView._onResize) window.removeEventListener('resize', S.fView._onResize);
+    S.fView.remove();
+    S.fView = null;
+  }
 }
 
 // ─── GOOGLE IDENTITY SERVICES ─────────────────────────────────────────────────
@@ -569,11 +573,22 @@ window.openBook = async id => {
     view('view-reader');
     await new Promise(r => requestAnimationFrame(r));
 
-    // ── Créer <foliate-view> ──
+    // ── Créer <foliate-view> avec dimensions explicites ──
     const fv = document.createElement('foliate-view');
-    fv.setAttribute('max-inline-size', '720');   // largeur max colonne (px)
-    fv.setAttribute('animated', '');             // animation de tourner de page
-    $('epub-wrap').appendChild(fv);
+    fv.setAttribute('max-inline-size', '720');
+    fv.setAttribute('animated', '');
+    const wrap = $('epub-wrap');
+    fv.style.width  = wrap.clientWidth  + 'px';
+    fv.style.height = wrap.clientHeight + 'px';
+    wrap.appendChild(fv);
+
+    // Redimensionner si la fenêtre change
+    const onResize = () => {
+      fv.style.width  = wrap.clientWidth  + 'px';
+      fv.style.height = wrap.clientHeight + 'px';
+    };
+    window.addEventListener('resize', onResize);
+    fv._onResize = onResize; // mémoriser pour pouvoir le retirer plus tard
     S.fView = fv;
 
     // ── Ouvrir l'epub ──
