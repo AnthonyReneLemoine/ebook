@@ -301,6 +301,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
 #rlayout{
   margin-top:50px;height:calc(100vh - 50px - 44px);
   display:flex;position:relative;
+  transition:height .3s, margin-top .3s;
+}
+#rlayout.bars-hidden{
+  margin-top:0;height:100vh;
 }
 /* Sidebar TDM */
 #sidebar{
@@ -310,6 +314,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
   overflow-y:auto;z-index:100;
   transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
 }
+#rlayout.bars-hidden ~ * #sidebar,
+#sidebar.bars-adjust{top:0;bottom:0;}
 #sidebar.open{transform:translateX(0)}
 #sb-tabs{display:flex;border-bottom:1px solid rgba(0,0,0,.08)}
 .sb-tab{
@@ -358,7 +364,9 @@ foliate-view{flex:1;width:100%;min-height:0;display:block}
   background:rgba(250,248,244,.93);backdrop-filter:blur(10px);
   border-top:1px solid rgba(0,0,0,.08);
   display:flex;align-items:center;padding:0 14px;gap:10px;z-index:150;
+  transform:translateY(0);transition:transform .3s;
 }
+#prog-bar-wrap.hidden{transform:translateY(100%)}
 #prog-current{font-size:.7rem;color:#9a8e7a;min-width:28px;text-align:right}
 #prog-track{
   flex:1;height:4px;background:rgba(0,0,0,.1);border-radius:2px;
@@ -642,7 +650,8 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
     <button class="rtbtn" id="btn-theme-toggle" onclick="toggleThemePanel()" title="Thème">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
     </button>
-    <button class="rtbtn" onclick="tryQuote()" title="Citer">❝</button>
+    <button class="rtbtn" onclick="tryQuote()" title="Sauvegarder une citation">❝</button>
+    <button class="rtbtn" onclick="toggleQuotes()" title="Voir les citations">📑</button>
   </div>
 
   <!-- Panneau thème -->
@@ -1148,6 +1157,7 @@ window.openBook=async id=>{
 
     applyFontStyle();
     renderQPanel();
+    setBarsVisible(true); // barres visibles à l'ouverture
     toast('');
   }catch(e){toast('Erreur : '+e.message);console.error(e);}
 };
@@ -1193,7 +1203,68 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeModal();closePanels();closeSearch();}
 });
 
-// Swipe (fallback document)
+// ── AUTO-HIDE DES BARRES (topbar + progbar) ───────────────────────────────────
+// Les barres se masquent au tap sur le texte, réapparaissent au tap suivant.
+// Quand elles sont cachées le viewer prend toute la hauteur de l'écran.
+let barsVisible = true;
+let _hideTimer   = null;
+
+function setBarsVisible(visible) {
+  barsVisible = visible;
+  const topbar  = $('rtopbar');
+  const progbar = $('prog-bar-wrap');
+  const layout  = $('rlayout');
+  const sidebar = $('sidebar');
+  if (visible) {
+    topbar.classList.remove('hidden');
+    progbar.classList.remove('hidden');
+    layout.style.marginTop = '50px';
+    layout.style.height    = 'calc(100vh - 50px - 44px)';
+    sidebar.style.top      = '50px';
+    sidebar.style.bottom   = '44px';
+    // Recalculer les dimensions du viewer
+    if (S.fView) {
+      const wrap = $('epub-wrap');
+      S.fView.style.width  = wrap.clientWidth  + 'px';
+      S.fView.style.height = wrap.clientHeight + 'px';
+    }
+  } else {
+    topbar.classList.add('hidden');
+    progbar.classList.add('hidden');
+    layout.style.marginTop = '0';
+    layout.style.height    = '100vh';
+    sidebar.style.top      = '0';
+    sidebar.style.bottom   = '0';
+    if (S.fView) {
+      const wrap = $('epub-wrap');
+      setTimeout(() => {
+        S.fView.style.width  = wrap.clientWidth  + 'px';
+        S.fView.style.height = wrap.clientHeight + 'px';
+      }, 320); // après la transition CSS
+    }
+  }
+}
+
+function toggleBars() {
+  // Ne pas toggler si un panneau est ouvert
+  if ($('modal-bg').classList.contains('open')) return;
+  if ($('sidebar').classList.contains('open')) return;
+  if ($('qpanel').classList.contains('open')) return;
+  if ($('search-panel').classList.contains('open')) return;
+  if ($('theme-panel').classList.contains('open')) return;
+  setBarsVisible(!barsVisible);
+}
+
+// Tap sur le viewer (zone centrale) → toggle barres
+// Le tap est détecté via l'event 'click' sur epub-wrap (remonte du foliate-view)
+$('epub-wrap').addEventListener('click', e => {
+  if (!$('view-reader').classList.contains('on')) return;
+  // Ignorer les clics sur les boutons prev/next
+  if (e.target === $('epub-prev') || e.target === $('epub-next')) return;
+  toggleBars();
+});
+
+// Swipe (fallback document — zones hors iframe)
 let _sx=0,_sy=0;
 document.addEventListener('touchstart',e=>{_sx=e.touches[0].clientX;_sy=e.touches[0].clientY;},{passive:true});
 document.addEventListener('touchend',e=>{
@@ -1411,10 +1482,12 @@ function closeSidebar(){
   $('overlay').classList.remove('show');
 }
 window.toggleSidebar=()=>{
+  if(!barsVisible) setBarsVisible(true);
   const s=$('sidebar'),o=$('overlay');
   s.classList.toggle('open')?o.classList.add('show'):o.classList.remove('show');
 };
 window.toggleQuotes=()=>{
+  if(!barsVisible) setBarsVisible(true);
   const p=$('qpanel'),o=$('overlay');
   p.classList.toggle('open')?o.classList.add('show'):o.classList.remove('show');
   if(p.classList.contains('open'))renderQPanel();
