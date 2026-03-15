@@ -2,279 +2,716 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
 <title>Liseuse</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='3' width='18' height='26' rx='2' fill='%23c0392b'/%3E%3Crect x='6' y='3' width='3' height='26' fill='%23922b21'/%3E%3Crect x='10' y='8' width='9' height='1.5' rx='1' fill='%23f9e4e4' opacity='.8'/%3E%3Crect x='10' y='12' width='7' height='1.5' rx='1' fill='%23f9e4e4' opacity='.8'/%3E%3Crect x='10' y='16' width='8' height='1.5' rx='1' fill='%23f9e4e4' opacity='.8'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Google Identity Services -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='20' height='28' rx='2' fill='%23c9933a'/%3E%3Crect x='6' y='2' width='4' height='28' fill='%23a07020'/%3E%3Crect x='11' y='8' width='10' height='1.5' rx='1' fill='white' opacity='.8'/%3E%3Crect x='11' y='12' width='7' height='1.5' rx='1' fill='white' opacity='.6'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
+/* ═══════════════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════════════ */
 :root {
-  --parchment:#f2ede4;--cream:#faf8f4;--ink:#1a1208;--ink-mid:#5c4f3a;--ink-pale:#9a8e7a;
-  --rust:#8b3a1a;--rust-dark:#5e2710;--gold:#c9933a;--border:#ddd5c4;--shadow:rgba(26,18,8,.10);
-  --sidebar-w:260px;--fr:'Crimson Pro',Georgia,serif;--fu:'DM Sans',sans-serif;
+  --bg:#0f0e0c; --bg2:#1a1814; --bg3:#242018; --bg4:#2e2a22;
+  --gold:#c9933a; --gold2:#e8b85a; --gold-dim:#8a6020;
+  --cream:#f0e8d8; --text:#d4cabb; --text-dim:#7a7060; --text-faint:#3a3628;
+  --border:#2e2a22; --border2:#3e3828;
+  --rust:#9b3a1a; --green:#2d6a3a;
+  --fr:'Playfair Display',Georgia,serif; --fu:'DM Sans',sans-serif;
+  --radius:10px; --sidebar-w:280px; --search-h:56px;
+  /* Thème lecture */
+  --reader-bg:#faf8f4; --reader-text:#1a1208; --reader-link:#8b3a1a;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--parchment);color:var(--ink);font-family:var(--fu);font-weight:300;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");background-size:256px;pointer-events:none;z-index:900;opacity:.5}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
-/* HEADER */
-#header{position:fixed;top:0;left:0;right:0;height:50px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:200;box-shadow:0 1px 0 rgba(201,147,58,.3)}
-#logo{font-family:var(--fr);font-style:italic;font-size:1.2rem;color:var(--gold);cursor:pointer;user-select:none}
-#logo span{color:var(--cream);font-style:normal;font-size:.9rem;opacity:.5;margin-right:6px}
-#hdr-r{display:flex;align-items:center;gap:6px}
-.hbtn{font-family:var(--fu);font-size:.73rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cream);background:none;border:1px solid rgba(250,248,244,.2);padding:5px 12px;border-radius:3px;cursor:pointer;transition:all .2s}
-.hbtn:hover{background:rgba(201,147,58,.15);border-color:var(--gold);color:var(--gold)}
-#user-badge{display:flex;align-items:center;gap:8px;color:var(--cream);font-size:.75rem;opacity:.7}
-#user-avatar{width:26px;height:26px;border-radius:50%;border:1px solid rgba(201,147,58,.4)}
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-/* VIEWS */
-.view{display:none;padding-top:50px;min-height:100vh}
+/* ═══════════════════════════════════════════════════════
+   VIEWS
+═══════════════════════════════════════════════════════ */
+.view{display:none;min-height:100vh}
 .view.on{display:block}
+#view-reader.on{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 
-/* LOGIN SCREEN */
-#view-login.on{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:50px 20px 20px}
-.login-box{background:var(--cream);border:1px solid var(--border);border-radius:14px;padding:48px 40px;max-width:420px;width:100%;box-shadow:0 12px 56px var(--shadow);text-align:center;animation:fadeUp .5s ease both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.login-box .lk{font-family:var(--fr);font-size:3rem;margin-bottom:16px}
-.login-box h1{font-family:var(--fr);font-size:2rem;font-weight:300;margin-bottom:8px}
-.login-box h1 em{color:var(--rust);font-style:italic}
-.login-box .sub{color:var(--ink-pale);font-size:.85rem;line-height:1.65;margin-bottom:32px}
-.btn-google{display:inline-flex;align-items:center;gap:12px;padding:13px 28px;background:white;border:1.5px solid var(--border);border-radius:6px;font-size:.9rem;font-family:var(--fu);font-weight:500;color:var(--ink);cursor:pointer;transition:all .22s;box-shadow:0 2px 8px rgba(26,18,8,.08)}
-.btn-google:hover{border-color:var(--rust);box-shadow:0 4px 20px rgba(139,58,26,.15);transform:translateY(-1px)}
-.btn-google svg{width:20px;height:20px;flex-shrink:0}
-.login-note{margin-top:20px;font-size:.72rem;color:var(--ink-pale);line-height:1.6}
+/* ═══════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════ */
+#header{
+  position:fixed;top:0;left:0;right:0;height:54px;
+  background:rgba(15,14,12,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;z-index:300;
+}
+#logo{
+  font-family:var(--fr);font-style:italic;font-size:1.35rem;
+  color:var(--gold);cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;
+  letter-spacing:.02em;
+}
+#logo-icon{font-size:1.1rem}
+#logo-ver{font-size:.58rem;font-family:var(--fu);font-style:normal;color:var(--text-dim);font-weight:400;margin-top:2px}
+#hdr-r{display:flex;align-items:center;gap:8px}
+.hbtn{
+  font-family:var(--fu);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-dim);background:none;border:1px solid var(--border2);
+  padding:6px 14px;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.hbtn:hover{color:var(--gold);border-color:var(--gold-dim);background:rgba(201,147,58,.08)}
+#user-badge{display:flex;align-items:center;gap:8px;cursor:default}
+#user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid var(--gold-dim);object-fit:cover}
+#user-name{font-size:.78rem;color:var(--text-dim)}
+#drive-dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);transition:background .3s}
+#drive-dot.ok{background:#4caf50}
+#drive-dot.err{background:#e53935}
 
-/* CONFIG */
-#view-cfg.on{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:50px 20px 20px}
-.cfg-box{background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:36px 32px;max-width:520px;width:100%;box-shadow:0 8px 40px var(--shadow);animation:fadeUp .4s ease both}
-.cfg-box h2{font-family:var(--fr);font-size:1.7rem;font-weight:600;margin-bottom:6px}
-.cfg-box .sub{color:var(--ink-pale);font-size:.82rem;margin-bottom:28px;line-height:1.6}
-.cfg-steps{counter-reset:step;margin-bottom:24px}
-.cfg-step{counter-increment:step;padding:14px 16px 14px 48px;position:relative;border-left:2px solid var(--border);margin-left:12px;margin-bottom:4px}
-.cfg-step::before{content:counter(step);position:absolute;left:-14px;top:12px;width:26px;height:26px;background:var(--rust);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:500;line-height:26px;text-align:center}
-.cfg-step p{font-size:.82rem;color:var(--ink-mid);line-height:1.6}
-.cfg-step a{color:var(--rust);text-decoration:none}
+/* ═══════════════════════════════════════════════════════
+   CONFIG / LOGIN — CENTRED CARDS
+═══════════════════════════════════════════════════════ */
+#view-cfg.on,#view-login.on{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:80px 20px 40px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(201,147,58,.07) 0%,transparent 60%),var(--bg);
+}
+.auth-card{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:16px;
+  padding:44px 40px;max-width:460px;width:100%;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+  animation:fadeUp .4s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.auth-card .card-icon{font-size:2.6rem;margin-bottom:16px;display:block;text-align:center}
+.auth-card h1{
+  font-family:var(--fr);font-size:2rem;font-weight:400;
+  color:var(--cream);margin-bottom:8px;text-align:center;
+}
+.auth-card h1 em{color:var(--gold);font-style:italic}
+.auth-card .sub{
+  color:var(--text-dim);font-size:.84rem;line-height:1.7;
+  margin-bottom:32px;text-align:center;
+}
+/* Config steps */
+.cfg-steps{margin-bottom:28px}
+.cfg-step{
+  display:flex;gap:14px;padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.cfg-step:last-child{border-bottom:none}
+.step-n{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  background:var(--gold-dim);color:var(--cream);
+  font-size:.7rem;font-weight:500;display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.cfg-step p{font-size:.81rem;color:var(--text-dim);line-height:1.65}
+.cfg-step a{color:var(--gold);text-decoration:none}
 .cfg-step a:hover{text-decoration:underline}
-.cfg-step code{background:var(--parchment);padding:1px 6px;border-radius:3px;font-size:.8rem;font-family:monospace}
-.fg{margin-bottom:18px}
-.fg label{display:block;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-mid);margin-bottom:7px}
-.fg input{width:100%;padding:10px 13px;background:white;border:1px solid var(--border);border-radius:5px;font-size:.88rem;font-family:var(--fu);color:var(--ink);outline:none;transition:border-color .2s}
-.fg input:focus{border-color:var(--rust)}
-.fg .hint{font-size:.72rem;color:var(--ink-pale);margin-top:5px;line-height:1.5}
-.fg a{color:var(--rust)}
-.btn-save{width:100%;padding:11px;background:var(--rust);color:white;border:none;border-radius:5px;font-size:.88rem;font-family:var(--fu);font-weight:500;cursor:pointer;transition:background .2s}
-.btn-save:hover{background:var(--rust-dark)}
+.cfg-step code{background:var(--bg3);padding:2px 7px;border-radius:4px;font-size:.77rem;font-family:monospace;color:var(--gold2)}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:7px}
+.fg input{
+  width:100%;padding:11px 14px;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:7px;
+  font-size:.87rem;font-family:var(--fu);color:var(--cream);outline:none;transition:border-color .2s;
+}
+.fg input:focus{border-color:var(--gold-dim)}
+.fg .hint{font-size:.7rem;color:var(--text-dim);margin-top:5px;line-height:1.5}
+.btn-primary{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1208;border:none;border-radius:7px;
+  font-size:.88rem;font-family:var(--fu);font-weight:500;
+  cursor:pointer;transition:opacity .2s;letter-spacing:.02em;
+}
+.btn-primary:hover{opacity:.9}
+/* Google button */
+.btn-google{
+  display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
+  padding:13px 20px;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:8px;
+  font-size:.9rem;font-family:var(--fu);font-weight:400;color:var(--cream);
+  cursor:pointer;transition:all .22s;
+}
+.btn-google:hover{border-color:var(--gold-dim);background:var(--bg4)}
+.btn-google svg{width:20px;height:20px;flex-shrink:0}
+.login-note{margin-top:16px;font-size:.7rem;color:var(--text-dim);line-height:1.6;text-align:center}
 
-/* LIBRARY */
-#lib-in{max-width:960px;margin:0 auto;padding:36px 20px 60px}
-#lib-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
-#lib-top h2{font-family:var(--fr);font-size:2rem;font-weight:300;line-height:1}
-#lib-top h2 em{font-style:italic;color:var(--rust)}
-#lib-search{padding:9px 14px;border:1px solid var(--border);border-radius:5px;background:var(--cream);font-size:.88rem;font-family:var(--fu);color:var(--ink);width:220px;outline:none;transition:border-color .2s}
-#lib-search:focus{border-color:var(--rust)}
-#upload-zone{border:2px dashed var(--border);border-radius:8px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:24px;color:var(--ink-pale);font-size:.88rem}
-#upload-zone:hover,#upload-zone.drag{border-color:var(--rust);background:rgba(139,58,26,.03);color:var(--rust)}
-#upload-zone .icon{font-size:2rem;margin-bottom:8px}
+/* ═══════════════════════════════════════════════════════
+   LIBRARY
+═══════════════════════════════════════════════════════ */
+#view-lib{padding-top:54px;min-height:100vh;background:var(--bg)}
+#lib-inner{max-width:1100px;margin:0 auto;padding:32px 20px 80px}
+
+/* Continue reading banner */
+#continue-banner{
+  display:none;
+  background:linear-gradient(135deg,var(--bg2),var(--bg3));
+  border:1px solid var(--border2);border-radius:14px;
+  padding:20px 22px;margin-bottom:32px;
+  flex-direction:row;align-items:center;gap:16px;
+  cursor:pointer;transition:border-color .2s;
+  animation:fadeUp .3s ease both;
+}
+#continue-banner:hover{border-color:var(--gold-dim)}
+#continue-cover{
+  width:54px;height:78px;border-radius:5px;object-fit:cover;
+  flex-shrink:0;background:var(--bg4);box-shadow:2px 4px 12px rgba(0,0,0,.4);
+}
+#continue-info{flex:1;min-width:0}
+#continue-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);font-weight:500;margin-bottom:4px}
+#continue-title{font-family:var(--fr);font-size:1.05rem;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+#continue-author{font-size:.78rem;color:var(--text-dim)}
+#continue-prog{margin-top:8px;height:2px;background:var(--border2);border-radius:1px}
+#continue-bar{height:100%;background:var(--gold);border-radius:1px;transition:width .3s}
+#continue-arrow{color:var(--gold);font-size:1.4rem;flex-shrink:0}
+
+/* Toolbar */
+#lib-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+#lib-toolbar h2{font-family:var(--fr);font-size:1.6rem;font-weight:400;color:var(--cream);flex:1;min-width:140px}
+#lib-toolbar h2 em{color:var(--gold);font-style:italic}
+#lib-search-wrap{position:relative;flex:1;min-width:180px;max-width:280px}
+#lib-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}
+#lib-search{
+  width:100%;padding:9px 12px 9px 36px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:7px;
+  font-size:.84rem;font-family:var(--fu);color:var(--cream);outline:none;transition:border-color .2s;
+}
+#lib-search:focus{border-color:var(--gold-dim)}
+#lib-sort{
+  padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:7px;font-size:.82rem;font-family:var(--fu);color:var(--text-dim);
+  outline:none;cursor:pointer;transition:border-color .2s;
+}
+#lib-sort:focus{border-color:var(--gold-dim)}
+#btn-upload-lib{
+  padding:9px 16px;background:none;border:1px solid var(--gold-dim);
+  border-radius:7px;font-size:.8rem;font-family:var(--fu);
+  color:var(--gold);cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+#btn-upload-lib:hover{background:rgba(201,147,58,.1)}
+
+/* Drop zone */
+#upload-zone{
+  border:2px dashed var(--border2);border-radius:10px;
+  padding:28px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;margin-bottom:28px;
+  color:var(--text-dim);font-size:.84rem;display:none;
+}
+#upload-zone.visible{display:block}
+#upload-zone:hover,#upload-zone.drag{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,147,58,.04)}
 #file-input{display:none}
-#books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
-.bcard{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:22px 16px 18px;cursor:pointer;transition:all .22s;position:relative;animation:fadeUp .3s ease both}
-.bcard:hover{transform:translateY(-3px);box-shadow:0 8px 24px var(--shadow);border-color:var(--gold)}
-.bcard-spine{position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(to bottom,var(--rust),var(--gold));border-radius:8px 0 0 8px;opacity:0;transition:opacity .22s}
-.bcard:hover .bcard-spine{opacity:1}
-.bcard-ico{font-size:2rem;margin-bottom:12px}
-.bcard-title{font-family:var(--fr);font-size:.95rem;font-weight:600;line-height:1.35;margin-bottom:5px;word-break:break-word}
-.bcard-meta{font-size:.72rem;color:var(--ink-pale)}
-.bcard-prog{margin-top:12px;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
-.bcard-bar{height:100%;background:var(--rust);border-radius:1px}
-.bcard-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--ink-pale);cursor:pointer;font-size:.75rem;opacity:0;transition:opacity .2s;padding:4px}
-.bcard:hover .bcard-del{opacity:1}
-.bcard-del:hover{color:#c0392b}
-.empty-lib{text-align:center;padding:60px 20px;color:var(--ink-pale);font-size:.88rem;grid-column:1/-1}
-.empty-lib .ei{font-size:3rem;margin-bottom:14px}
 
-/* READER */
-#view-reader.on{display:flex;flex-direction:column}
-#rtopbar{position:fixed;top:50px;left:0;right:0;height:44px;background:var(--cream);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;z-index:150}
-#rbook-title{flex:1;font-family:var(--fr);font-style:italic;font-size:.9rem;color:var(--ink-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tbtn{width:30px;height:30px;border:1px solid var(--border);background:none;color:var(--ink-mid);border-radius:4px;cursor:pointer;font-size:.82rem;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
-.tbtn:hover{background:var(--rust);color:white;border-color:var(--rust)}
-#font-sz{font-size:.72rem;color:var(--ink-pale);min-width:24px;text-align:center}
-#rlayout{display:flex;margin-top:94px;height:calc(100vh - 94px)}
-#sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--cream);border-right:1px solid var(--border);position:fixed;top:94px;bottom:0;left:0;overflow-y:auto;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:100}
+/* Books grid */
+#books-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:20px;
+}
+@media(min-width:600px){#books-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
+@media(min-width:900px){#books-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
+
+.bcard{
+  cursor:pointer;transition:transform .22s;
+  animation:fadeUp .3s ease both;position:relative;
+}
+.bcard:hover{transform:translateY(-4px)}
+.bcard:hover .bcard-actions{opacity:1}
+.bcard-cover-wrap{
+  position:relative;border-radius:8px;overflow:hidden;
+  aspect-ratio:2/3;background:var(--bg3);
+  box-shadow:0 4px 18px rgba(0,0,0,.45);margin-bottom:10px;
+}
+.bcard-cover{width:100%;height:100%;object-fit:cover;display:block}
+.bcard-cover-placeholder{
+  width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+  background:linear-gradient(145deg,var(--bg3),var(--bg4));
+  padding:12px;text-align:center;
+}
+.bcard-cover-placeholder .ph-icon{font-size:2rem;opacity:.4}
+.bcard-cover-placeholder .ph-title{
+  font-family:var(--fr);font-size:.72rem;color:var(--text-dim);
+  line-height:1.3;word-break:break-word;
+}
+.bcard-prog-overlay{
+  position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,.3);
+}
+.bcard-prog-bar{height:100%;background:var(--gold);transition:width .3s}
+.bcard-actions{
+  position:absolute;top:6px;right:6px;
+  display:flex;flex-direction:column;gap:4px;opacity:0;transition:opacity .2s;
+}
+.bcard-action-btn{
+  width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.7);
+  border:none;color:var(--text);cursor:pointer;font-size:.75rem;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.bcard-action-btn:hover{background:var(--rust);color:white}
+.bcard-title{
+  font-family:var(--fr);font-size:.88rem;color:var(--cream);
+  line-height:1.3;margin-bottom:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.bcard-author{font-size:.73rem;color:var(--text-dim)}
+.bcard-pct{font-size:.68rem;color:var(--gold);margin-top:2px}
+
+.empty-lib{
+  text-align:center;padding:80px 20px;color:var(--text-dim);
+  grid-column:1/-1;
+}
+.empty-lib .ei{font-size:3.5rem;margin-bottom:16px;opacity:.3}
+.empty-lib p{font-size:.88rem;line-height:1.7}
+
+/* ═══════════════════════════════════════════════════════
+   READER
+═══════════════════════════════════════════════════════ */
+#view-reader{background:var(--reader-bg);position:relative}
+
+/* Top bar du reader */
+#rtopbar{
+  position:fixed;top:0;left:0;right:0;height:50px;
+  background:rgba(250,248,244,.93);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex;align-items:center;padding:0 10px;gap:6px;z-index:200;
+  transform:translateY(0);transition:transform .25s;
+}
+#rtopbar.hidden{transform:translateY(-100%)}
+.rtbtn{
+  width:34px;height:34px;border:none;background:none;
+  color:#5c4f3a;border-radius:6px;cursor:pointer;
+  font-size:.88rem;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;
+}
+.rtbtn:hover{background:rgba(0,0,0,.07)}
+.rtbtn.active{background:rgba(139,58,26,.12);color:#8b3a1a}
+#rbook-title{
+  flex:1;font-family:var(--fr);font-style:italic;
+  font-size:.88rem;color:#5c4f3a;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding:0 4px;
+}
+#font-sz{font-size:.72rem;color:#9a8e7a;min-width:36px;text-align:center}
+
+/* Layout lecteur */
+#rlayout{
+  margin-top:50px;height:calc(100vh - 50px - 44px);
+  display:flex;position:relative;
+}
+/* Sidebar TDM */
+#sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:#faf8f4;border-right:1px solid rgba(0,0,0,.08);
+  position:fixed;top:50px;bottom:44px;left:0;
+  overflow-y:auto;z-index:100;
+  transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+}
 #sidebar.open{transform:translateX(0)}
-#sb-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-pale);padding:16px 16px 10px;border-bottom:1px solid var(--border);font-weight:500}
-.toc-item{padding:9px 16px;font-size:.82rem;color:var(--ink-mid);cursor:pointer;border-left:3px solid transparent;transition:all .15s;line-height:1.4}
-.toc-item:hover{background:rgba(139,58,26,.05);color:var(--ink)}
-.toc-item.on{border-left-color:var(--rust);color:var(--rust);background:rgba(139,58,26,.04)}
-.toc-item.sub{padding-left:28px;font-size:.78rem}
+#sb-tabs{display:flex;border-bottom:1px solid rgba(0,0,0,.08)}
+.sb-tab{
+  flex:1;padding:11px 8px;font-size:.75rem;font-weight:500;
+  text-align:center;cursor:pointer;color:#9a8e7a;
+  border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;
+}
+.sb-tab.on{color:#8b3a1a;border-bottom-color:#8b3a1a}
+.sb-panel{display:none;padding:8px 0}
+.sb-panel.on{display:block}
+.toc-item{
+  padding:9px 18px;font-size:.82rem;color:#5c4f3a;
+  cursor:pointer;border-left:3px solid transparent;transition:all .15s;line-height:1.4;
+}
+.toc-item:hover{background:rgba(139,58,26,.04);color:#1a1208}
+.toc-item.on{border-left-color:#8b3a1a;color:#8b3a1a;background:rgba(139,58,26,.04)}
+.toc-item.sub{padding-left:30px;font-size:.78rem}
 
-/* foliate-view */
-#epub-wrap{flex:1;overflow:hidden;position:relative;background:var(--parchment);display:flex;flex-direction:column}
+/* Zone epub */
+#epub-wrap{
+  flex:1;overflow:hidden;background:var(--reader-bg);
+  display:flex;flex-direction:column;
+}
 foliate-view{flex:1;width:100%;min-height:0;display:block}
-foliate-view::part(filter){background:var(--parchment)}
 
-#epub-prev,#epub-next{position:fixed;top:50%;transform:translateY(-50%);width:36px;height:64px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--ink-mid);transition:all .2s;z-index:120;opacity:0.15}
-#epub-prev{left:2px}
-#epub-next{right:2px}
-#epub-prev:hover,#epub-next:hover{background:var(--rust);color:white;border:1px solid var(--rust);opacity:1}
-@media(hover:none){#epub-prev,#epub-next{opacity:0.5;background:rgba(250,248,244,0.7);border:1px solid var(--border)}}
-@media(min-width:900px){#sidebar{transform:translateX(0);position:fixed}#epub-wrap{margin-left:var(--sidebar-w)}#epub-prev{left:calc(var(--sidebar-w) + 2px)}}
-@media(max-width:500px){#epub-prev,#epub-next{width:28px;height:50px;font-size:1rem}}
-#epub-progress{position:fixed;bottom:0;left:0;right:0;height:3px;background:var(--border);z-index:120}
-#epub-progress-bar{height:100%;background:var(--rust);transition:width .3s}
+/* Boutons prev/next */
+#epub-prev,#epub-next{
+  position:fixed;top:50%;transform:translateY(-50%);
+  width:40px;height:72px;background:none;border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;color:rgba(0,0,0,.15);z-index:120;transition:color .2s;
+}
+#epub-prev{left:0}
+#epub-next{right:0}
+#epub-prev:hover,#epub-next:hover{color:rgba(139,58,26,.5)}
+@media(hover:none){#epub-prev,#epub-next{color:rgba(0,0,0,.2)}}
+@media(min-width:900px){
+  #sidebar{transform:translateX(0)}
+  #epub-wrap{margin-left:var(--sidebar-w)}
+  #epub-prev{left:calc(var(--sidebar-w))}
+}
 
-/* QUOTES */
-#qpanel{width:300px;flex-shrink:0;background:var(--cream);border-left:1px solid var(--border);position:fixed;top:94px;bottom:0;right:0;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:100}
+/* Barre de progression tactile (bas) */
+#prog-bar-wrap{
+  position:fixed;bottom:0;left:0;right:0;height:44px;
+  background:rgba(250,248,244,.93);backdrop-filter:blur(10px);
+  border-top:1px solid rgba(0,0,0,.08);
+  display:flex;align-items:center;padding:0 14px;gap:10px;z-index:150;
+}
+#prog-current{font-size:.7rem;color:#9a8e7a;min-width:28px;text-align:right}
+#prog-track{
+  flex:1;height:4px;background:rgba(0,0,0,.1);border-radius:2px;
+  cursor:pointer;position:relative;touch-action:none;
+}
+#prog-fill{
+  height:100%;background:#8b3a1a;border-radius:2px;
+  pointer-events:none;transition:width .15s;
+}
+#prog-thumb{
+  position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:14px;height:14px;border-radius:50%;
+  background:#8b3a1a;box-shadow:0 1px 4px rgba(0,0,0,.3);
+  pointer-events:none;
+}
+#prog-total{font-size:.7rem;color:#9a8e7a;min-width:28px}
+
+/* ─── MODES LECTURE ──────────────────────────────────── */
+/* Jour : défaut (--reader-bg = #faf8f4) */
+body.mode-sepia{--reader-bg:#f5f0e8}
+body.mode-sepia foliate-view::part(filter){filter:sepia(.25) brightness(.97)}
+body.mode-night{--reader-bg:#1a1814}
+body.mode-night #rtopbar{background:rgba(26,24,20,.93);border-color:rgba(255,255,255,.06)}
+body.mode-night #prog-bar-wrap{background:rgba(26,24,20,.93);border-color:rgba(255,255,255,.06)}
+body.mode-night .rtbtn{color:#c0b898}
+body.mode-night #rbook-title{color:#c0b898}
+body.mode-night #font-sz{color:#7a7060}
+body.mode-night #prog-current,body.mode-night #prog-total{color:#7a7060}
+body.mode-night #prog-track{background:rgba(255,255,255,.1)}
+body.mode-night #epub-prev,body.mode-night #epub-next{color:rgba(255,255,255,.15)}
+body.mode-night foliate-view::part(filter){filter:invert(1) hue-rotate(180deg) brightness(.85)}
+body.mode-night #sidebar{background:#1e1c18;border-color:rgba(255,255,255,.06)}
+body.mode-night .toc-item{color:#b0a890}
+body.mode-night .toc-item.on{color:#c9933a;border-left-color:#c9933a;background:rgba(201,147,58,.08)}
+body.mode-night .sb-tab{color:#7a7060}
+body.mode-night .sb-tab.on{color:#c9933a;border-bottom-color:#c9933a}
+
+/* ─── PANNEAU THÈME ───────────────────────────────────── */
+#theme-panel{
+  position:fixed;top:54px;right:12px;
+  background:#faf8f4;border:1px solid rgba(0,0,0,.12);
+  border-radius:10px;padding:14px;z-index:250;
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+  display:none;min-width:190px;
+  animation:fadeUp .18s ease both;
+}
+#theme-panel.open{display:block}
+body.mode-night #theme-panel{background:#242018;border-color:rgba(255,255,255,.1)}
+.theme-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:#9a8e7a;margin-bottom:10px}
+.theme-modes{display:flex;gap:6px;margin-bottom:14px}
+.theme-mode-btn{
+  flex:1;padding:7px 4px;border-radius:6px;border:1px solid rgba(0,0,0,.1);
+  font-size:.72rem;font-family:var(--fu);cursor:pointer;text-align:center;
+  transition:all .15s;background:white;color:#1a1208;
+}
+.theme-mode-btn.sepia{background:#f5f0e8}
+.theme-mode-btn.night{background:#1a1814;color:#c0b898;border-color:rgba(255,255,255,.1)}
+.theme-mode-btn.active{outline:2px solid #8b3a1a;outline-offset:1px}
+body.mode-night .theme-mode-btn.active{outline-color:#c9933a}
+
+/* ─── PANNEAU RECHERCHE ───────────────────────────────── */
+#search-panel{
+  position:fixed;top:50px;left:0;right:0;
+  background:#faf8f4;border-bottom:1px solid rgba(0,0,0,.1);
+  z-index:190;padding:10px 14px;
+  display:none;
+  animation:fadeDown .18s ease both;
+}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+#search-panel.open{display:block}
+body.mode-night #search-panel{background:#1e1c18;border-color:rgba(255,255,255,.06)}
+#search-input-wrap{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+#search-input{
+  flex:1;padding:9px 12px;background:rgba(0,0,0,.06);
+  border:1px solid rgba(0,0,0,.1);border-radius:7px;
+  font-size:.88rem;font-family:var(--fu);color:#1a1208;outline:none;
+}
+body.mode-night #search-input{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:#d4cabb}
+#search-input:focus{border-color:#8b3a1a}
+#btn-search-go{
+  padding:9px 14px;background:#8b3a1a;color:white;
+  border:none;border-radius:7px;font-size:.82rem;cursor:pointer;white-space:nowrap;
+}
+#search-status{font-size:.75rem;color:#9a8e7a;padding:2px 0}
+#search-results{
+  max-height:210px;overflow-y:auto;margin-top:4px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.sres{
+  padding:8px 10px;border-radius:6px;cursor:pointer;
+  font-size:.8rem;color:#5c4f3a;line-height:1.5;
+  transition:background .13s;
+}
+.sres:hover{background:rgba(139,58,26,.08)}
+body.mode-night .sres{color:#b0a890}
+body.mode-night .sres:hover{background:rgba(201,147,58,.1)}
+.sres mark{background:rgba(139,58,26,.2);color:#8b3a1a;border-radius:2px;padding:0 2px}
+body.mode-night .sres mark{background:rgba(201,147,58,.25);color:#c9933a}
+
+/* ─── PANEL CITATIONS ─────────────────────────────────── */
+#qpanel{
+  position:fixed;top:50px;right:0;bottom:44px;width:300px;
+  background:#faf8f4;border-left:1px solid rgba(0,0,0,.08);
+  display:flex;flex-direction:column;z-index:100;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+}
 #qpanel.open{transform:translateX(0)}
-#qp-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-#qp-hdr h3{font-family:var(--fr);font-size:1rem;font-weight:600}
-#qp-cnt{font-size:.72rem;color:var(--ink-pale)}
-#qlist{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-.qcard{background:white;border:1px solid var(--border);border-left:3px solid var(--rust);border-radius:4px;padding:12px 30px 12px 12px;position:relative;animation:fadeUp .25s ease both}
-.qtxt{font-family:var(--fr);font-style:italic;font-size:.84rem;line-height:1.65;color:var(--ink);margin-bottom:6px}
-.qmeta{font-size:.68rem;color:var(--ink-pale);line-height:1.5}
-.qnote{font-size:.75rem;color:var(--rust);margin-top:4px;font-style:italic}
-.qdel{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--ink-pale);cursor:pointer;font-size:.75rem;opacity:.4;transition:opacity .15s;padding:2px}
+body.mode-night #qpanel{background:#1e1c18;border-color:rgba(255,255,255,.06)}
+#qp-hdr{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center}
+body.mode-night #qp-hdr{border-color:rgba(255,255,255,.06)}
+#qp-hdr h3{font-family:var(--fr);font-size:1rem;font-weight:600;color:#1a1208}
+body.mode-night #qp-hdr h3{color:#d4cabb}
+#qp-cnt{font-size:.72rem;color:#9a8e7a}
+#qlist{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.qcard{background:white;border:1px solid rgba(0,0,0,.08);border-left:3px solid #8b3a1a;border-radius:5px;padding:10px 28px 10px 10px;position:relative}
+body.mode-night .qcard{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.07);border-left-color:#c9933a}
+.qtxt{font-family:var(--fr);font-style:italic;font-size:.82rem;line-height:1.65;color:#1a1208;margin-bottom:5px}
+body.mode-night .qtxt{color:#d4cabb}
+.qmeta{font-size:.67rem;color:#9a8e7a;line-height:1.5}
+.qnote{font-size:.73rem;color:#8b3a1a;margin-top:3px;font-style:italic}
+body.mode-night .qnote{color:#c9933a}
+.qdel{position:absolute;top:6px;right:6px;background:none;border:none;color:#9a8e7a;cursor:pointer;font-size:.72rem;opacity:.4;transition:opacity .15s;padding:2px}
 .qdel:hover{opacity:1;color:#c0392b}
-.qexp{padding:12px;border-top:1px solid var(--border)}
-.btn-exp{width:100%;padding:8px;background:none;border:1px solid var(--border);border-radius:4px;font-size:.75rem;font-family:var(--fu);color:var(--ink-mid);cursor:pointer;transition:all .18s}
-.btn-exp:hover{background:var(--ink);color:white;border-color:var(--ink)}
+.qexp{padding:10px;border-top:1px solid rgba(0,0,0,.08)}
+body.mode-night .qexp{border-color:rgba(255,255,255,.06)}
+.btn-exp{width:100%;padding:8px;background:none;border:1px solid rgba(0,0,0,.1);border-radius:5px;font-size:.75rem;font-family:var(--fu);color:#5c4f3a;cursor:pointer;transition:all .18s}
+body.mode-night .btn-exp{border-color:rgba(255,255,255,.1);color:#b0a890}
+.btn-exp:hover{background:#1a1208;color:white;border-color:#1a1208}
 
-/* MODAL */
-#modal-bg{display:none;position:fixed;inset:0;background:rgba(26,18,8,.55);z-index:400;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+/* ─── MODAL CITATION ──────────────────────────────────── */
+#modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
 #modal-bg.open{display:flex}
-#modal-box{background:var(--cream);border-radius:10px;padding:28px 24px;max-width:460px;width:100%;box-shadow:0 16px 64px rgba(26,18,8,.3);animation:fadeUp .22s ease both}
-#modal-box h3{font-family:var(--fr);font-size:1.15rem;font-weight:600;margin-bottom:14px}
-#modal-exc{background:var(--parchment);border-left:3px solid var(--rust);padding:12px 14px;font-family:var(--fr);font-style:italic;font-size:.88rem;line-height:1.7;color:var(--ink);border-radius:0 5px 5px 0;margin-bottom:14px;max-height:130px;overflow-y:auto}
-#modal-note{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:5px;background:white;font-size:.88rem;font-family:var(--fu);color:var(--ink);resize:none;outline:none;margin-bottom:16px;line-height:1.5}
-#modal-note:focus{border-color:var(--rust)}
-#modal-act{display:flex;gap:10px;justify-content:flex-end}
-.btn-cancel{padding:8px 18px;background:none;border:1px solid var(--border);border-radius:4px;font-size:.85rem;font-family:var(--fu);color:var(--ink-mid);cursor:pointer}
-.btn-ok{padding:8px 20px;background:var(--rust);border:none;border-radius:4px;font-size:.85rem;font-family:var(--fu);color:white;cursor:pointer;transition:background .18s}
-.btn-ok:hover{background:var(--rust-dark)}
+#modal-box{background:#faf8f4;border-radius:12px;padding:26px 22px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:fadeUp .2s ease both}
+body.mode-night #modal-box{background:#242018}
+#modal-box h3{font-family:var(--fr);font-size:1.1rem;font-weight:600;color:#1a1208;margin-bottom:12px}
+body.mode-night #modal-box h3{color:#d4cabb}
+#modal-exc{background:#f2ede4;border-left:3px solid #8b3a1a;padding:10px 12px;font-family:var(--fr);font-style:italic;font-size:.86rem;line-height:1.7;color:#1a1208;border-radius:0 5px 5px 0;margin-bottom:12px;max-height:110px;overflow-y:auto}
+body.mode-night #modal-exc{background:rgba(255,255,255,.05);color:#d4cabb}
+#modal-note{width:100%;padding:9px 11px;border:1px solid rgba(0,0,0,.12);border-radius:6px;background:white;font-size:.86rem;font-family:var(--fu);color:#1a1208;resize:none;outline:none;margin-bottom:14px;line-height:1.5}
+body.mode-night #modal-note{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#d4cabb}
+#modal-note:focus{border-color:#8b3a1a}
+#modal-act{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{padding:8px 16px;background:none;border:1px solid rgba(0,0,0,.12);border-radius:5px;font-size:.83rem;font-family:var(--fu);color:#5c4f3a;cursor:pointer}
+body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
+.btn-ok{padding:8px 18px;background:#8b3a1a;border:none;border-radius:5px;font-size:.83rem;font-family:var(--fu);color:white;cursor:pointer;transition:background .18s}
+.btn-ok:hover{background:#5e2710}
 
-/* MISC */
-#overlay{display:none;position:fixed;inset:0;background:rgba(26,18,8,.35);z-index:90}
+/* ─── OVERLAY + TOAST ─────────────────────────────────── */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
 #overlay.show{display:block}
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--ink);color:var(--cream);padding:9px 20px;border-radius:5px;font-size:.82rem;z-index:999;transition:transform .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(26,18,8,.3)}
+#toast{
+  position:fixed;bottom:56px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:#1a1208;color:#f0e8d8;padding:9px 18px;border-radius:6px;
+  font-size:.81rem;z-index:999;transition:transform .25s;pointer-events:none;
+  white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4);
+}
 #toast.show{transform:translateX(-50%) translateY(0)}
-#drive-status{font-size:.68rem;color:var(--ink-pale);display:flex;align-items:center;gap:4px}
-#drive-status .dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
-#drive-status.ok .dot{background:#4caf50}
-#drive-status.err .dot{background:#c0392b}
+
+/* ─── RESPONSIVE ──────────────────────────────────────── */
+@media(max-width:420px){
+  .auth-card{padding:32px 22px}
+  #books-grid{grid-template-columns:repeat(3,1fr);gap:12px}
+}
 </style>
 </head>
 <body>
 
+<!-- ═══════════════ HEADER ═══════════════ -->
 <div id="header">
-  <div id="logo" onclick="goLib()"><span>📚</span>Liseuse <small style="font-style:normal;font-size:.65rem;opacity:.5;font-family:var(--fu)">v6</small></div>
+  <div id="logo" onclick="goLib()">
+    <span id="logo-icon">📚</span>
+    <span>Liseuse<span id="logo-ver">v7</span></span>
+  </div>
   <div id="hdr-r">
-    <div id="drive-status" style="display:none"><div class="dot"></div><span id="drive-status-txt">Drive</span></div>
+    <div id="drive-dot" title="Drive"></div>
     <div id="user-badge" style="display:none">
       <img id="user-avatar" src="" alt="">
       <span id="user-name"></span>
     </div>
     <button class="hbtn" id="btn-lib" onclick="goLib()" style="display:none">Bibliothèque</button>
-    <button class="hbtn" id="btn-qhdr" onclick="toggleQuotes()" style="display:none">Citations</button>
     <button class="hbtn" id="btn-cfg" onclick="goCfg()" style="display:none">Config</button>
     <button class="hbtn" id="btn-logout" onclick="signOut()" style="display:none">Déconnexion</button>
   </div>
 </div>
 
-<!-- SETUP -->
+<!-- ═══════════════ CONFIG ═══════════════ -->
 <div class="view on" id="view-cfg">
-  <div class="cfg-box">
-    <h2>Configuration Google</h2>
-    <p class="sub">Créez une application Google OAuth et renseignez votre Client ID. Cette opération est à faire une seule fois.</p>
+  <div class="auth-card">
+    <span class="card-icon">⚙️</span>
+    <h1>Configuration <em>Google</em></h1>
+    <p class="sub">Créez une application OAuth pour connecter votre Google Drive. À faire une seule fois.</p>
     <div class="cfg-steps">
-      <div class="cfg-step"><p>Rendez-vous sur <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> et créez un projet (ex : <code>liseuse</code>).</p></div>
-      <div class="cfg-step"><p>Dans <strong>APIs &amp; Services → Bibliothèque</strong>, activez l'<strong>API Google Drive</strong>.</p></div>
-      <div class="cfg-step"><p>Dans <strong>Identifiants</strong>, créez un <strong>ID client OAuth 2.0</strong> de type <em>Application Web</em>. Ajoutez l'URL GitHub Pages dans <em>Origines JavaScript autorisées</em>.</p></div>
-      <div class="cfg-step"><p>Dans <strong>Écran de consentement OAuth</strong>, ajoutez votre Gmail en <em>Utilisateurs test</em>.</p></div>
-      <div class="cfg-step"><p>Copiez l'<strong>ID client</strong> (se termine par <code>.apps.googleusercontent.com</code>) ci-dessous.</p></div>
+      <div class="cfg-step"><div class="step-n">1</div><p>Rendez-vous sur <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> → créez un projet (ex&nbsp;: <code>liseuse</code>).</p></div>
+      <div class="cfg-step"><div class="step-n">2</div><p>APIs &amp; Services → Bibliothèque → activez l'<strong>API Google Drive</strong>.</p></div>
+      <div class="cfg-step"><div class="step-n">3</div><p>Identifiants → Créer un <strong>ID client OAuth 2.0</strong> (Application Web). Ajoutez l'URL GitHub Pages dans <em>Origines autorisées</em>.</p></div>
+      <div class="cfg-step"><div class="step-n">4</div><p>Écran de consentement → ajoutez votre Gmail en <em>Utilisateurs test</em>.</p></div>
+      <div class="cfg-step"><div class="step-n">5</div><p>Copiez l'<strong>ID client</strong> (se termine par <code>.apps.googleusercontent.com</code>).</p></div>
     </div>
     <div class="fg">
       <label>Google OAuth Client ID</label>
       <input type="text" id="cfg-clientid" placeholder="123456789-xxxx.apps.googleusercontent.com">
-      <div class="hint">Stocké uniquement dans votre navigateur (localStorage).</div>
+      <div class="hint">Stocké localement dans votre navigateur uniquement.</div>
     </div>
     <div class="fg">
-      <label>Nom du dossier Drive <span style="font-weight:300;text-transform:none">(optionnel)</span></label>
-      <input type="text" id="cfg-folder" placeholder="Liseuse" value="Liseuse">
+      <label>Nom du dossier Drive</label>
+      <input type="text" id="cfg-folder" value="Liseuse">
     </div>
-    <button class="btn-save" onclick="saveSetup()">Enregistrer et se connecter</button>
+    <button class="btn-primary" onclick="saveSetup()">Enregistrer et continuer →</button>
   </div>
 </div>
 
-<!-- LOGIN -->
+<!-- ═══════════════ LOGIN ═══════════════ -->
 <div class="view" id="view-login">
-  <div class="login-box">
-    <div class="lk">📖</div>
+  <div class="auth-card">
+    <span class="card-icon">📖</span>
     <h1>Ma <em>liseuse</em></h1>
-    <p class="sub">Vos livres EPUB et citations sont stockés dans votre Google Drive. Connectez-vous pour accéder à votre bibliothèque.</p>
+    <p class="sub">Vos livres EPUB, citations et progression sont stockés dans votre Google Drive personnel.</p>
     <button class="btn-google" onclick="signIn()">
       <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
       Se connecter avec Google
     </button>
-    <p class="login-note">Seul votre compte Google autorisé peut accéder à cette application.<br>Aucune donnée ne transite par un serveur tiers.</p>
-    <p style="margin-top:16px;font-size:.72rem;color:var(--ink-pale)"><a href="#" onclick="goCfg();return false" style="color:var(--rust)">Modifier la configuration</a></p>
+    <p class="login-note">Aucune donnée ne transite par un serveur tiers.<br><a href="#" onclick="goCfg();return false" style="color:var(--gold)">Modifier la configuration</a></p>
   </div>
 </div>
 
-<!-- LIBRARY -->
+<!-- ═══════════════ LIBRARY ═══════════════ -->
 <div class="view" id="view-lib">
-  <div id="lib-in">
-    <div id="lib-top">
-      <h2>Ma <em>bibliothèque</em></h2>
-      <input type="search" id="lib-search" placeholder="Rechercher…" oninput="filterBooks()">
+  <div id="lib-inner">
+    <!-- Continuer la lecture -->
+    <div id="continue-banner" onclick="continueReading()">
+      <img id="continue-cover" src="" alt="">
+      <div id="continue-info">
+        <div id="continue-label">Continuer la lecture</div>
+        <div id="continue-title"></div>
+        <div id="continue-author"></div>
+        <div id="continue-prog"><div id="continue-bar" style="width:0%"></div></div>
+      </div>
+      <div id="continue-arrow">›</div>
     </div>
-    <div id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave()">
-      <div class="icon">📂</div>
-      <div>Glissez un <strong>.epub</strong> ici, ou cliquez pour l'uploader dans votre Drive</div>
-      <div style="margin-top:6px;font-size:.75rem;color:var(--ink-pale)">Format EPUB uniquement</div>
+    <!-- Toolbar -->
+    <div id="lib-toolbar">
+      <h2>Ma <em>bibliothèque</em></h2>
+      <div id="lib-search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" id="lib-search" placeholder="Titre, auteur…" oninput="filterBooks()">
+      </div>
+      <select id="lib-sort" onchange="sortBooks()">
+        <option value="recent">Récents</option>
+        <option value="title">Titre A–Z</option>
+        <option value="author">Auteur A–Z</option>
+        <option value="progress">Progression</option>
+      </select>
+      <button id="btn-upload-lib" onclick="$('upload-zone').classList.toggle('visible')">+ Ajouter</button>
+    </div>
+    <!-- Upload zone -->
+    <div id="upload-zone" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave()" onclick="$('file-input').click()">
+      <div style="font-size:1.8rem;margin-bottom:8px;opacity:.4">📂</div>
+      Glissez un <strong>.epub</strong> ici ou cliquez pour choisir
     </div>
     <input type="file" id="file-input" accept=".epub" multiple onchange="handleFiles(this.files)">
+    <!-- Grille -->
     <div id="books-grid"></div>
   </div>
 </div>
 
-<!-- READER -->
+<!-- ═══════════════ READER ═══════════════ -->
 <div class="view" id="view-reader">
+
+  <!-- Top bar -->
   <div id="rtopbar">
-    <button class="tbtn" title="Chapitres" onclick="toggleSidebar()">☰</button>
+    <button class="rtbtn" onclick="toggleSidebar()" title="Table des matières">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="15" y2="18"/></svg>
+    </button>
     <div id="rbook-title">—</div>
-    <button class="tbtn" title="Réduire police" onclick="chFont(-1)">A−</button>
+    <button class="rtbtn" id="btn-search-toggle" onclick="toggleSearch()" title="Rechercher">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="rtbtn" onclick="chFont(-1)" title="Réduire">A−</button>
     <span id="font-sz">100%</span>
-    <button class="tbtn" title="Agrandir police" onclick="chFont(1)">A+</button>
-    <button class="tbtn" title="Citer la sélection" onclick="tryQuote()">❝</button>
+    <button class="rtbtn" onclick="chFont(1)" title="Agrandir">A+</button>
+    <button class="rtbtn" id="btn-theme-toggle" onclick="toggleThemePanel()" title="Thème">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+    <button class="rtbtn" onclick="tryQuote()" title="Citer">❝</button>
   </div>
-  <div id="rlayout">
-    <nav id="sidebar">
-      <div id="sb-label">Table des matières</div>
-      <div id="toc-list"></div>
-    </nav>
-    <div id="epub-wrap">
-      <!-- <foliate-view> injecté dynamiquement -->
+
+  <!-- Panneau thème -->
+  <div id="theme-panel">
+    <div class="theme-title">Mode lecture</div>
+    <div class="theme-modes">
+      <button class="theme-mode-btn active" id="mode-jour" onclick="setMode('jour')">Jour</button>
+      <button class="theme-mode-btn sepia" id="mode-sepia" onclick="setMode('sepia')">Sépia</button>
+      <button class="theme-mode-btn night" id="mode-night" onclick="setMode('night')">Nuit</button>
     </div>
   </div>
+
+  <!-- Panneau recherche -->
+  <div id="search-panel">
+    <div id="search-input-wrap">
+      <input type="search" id="search-input" placeholder="Rechercher dans le livre…" oninput="doSearch()">
+      <button id="btn-search-go" onclick="doSearch()">Chercher</button>
+      <button class="rtbtn" onclick="closeSearch()">✕</button>
+    </div>
+    <div id="search-status"></div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- Layout -->
+  <div id="rlayout">
+    <nav id="sidebar">
+      <div id="sb-tabs">
+        <button class="sb-tab on" data-panel="toc" onclick="switchSbTab('toc')">Chapitres</button>
+        <button class="sb-tab" data-panel="quotes" onclick="switchSbTab('quotes')">Citations</button>
+      </div>
+      <div id="sb-toc" class="sb-panel on">
+        <div id="toc-list"></div>
+      </div>
+      <div id="sb-quotes" class="sb-panel">
+        <div id="sb-qlist" style="padding:8px 10px;display:flex;flex-direction:column;gap:8px"></div>
+        <div class="qexp" style="padding:10px"><button class="btn-exp" onclick="exportQ()">↓ Exporter citations</button></div>
+      </div>
+    </nav>
+    <div id="epub-wrap">
+      <!-- foliate-view injecté dynamiquement -->
+    </div>
+  </div>
+
+  <!-- Prev / Next -->
   <button id="epub-prev" onclick="epubPrev()">‹</button>
   <button id="epub-next" onclick="epubNext()">›</button>
-  <div id="epub-progress"><div id="epub-progress-bar" style="width:0%"></div></div>
+
+  <!-- Barre progression tactile -->
+  <div id="prog-bar-wrap">
+    <span id="prog-current">0%</span>
+    <div id="prog-track">
+      <div id="prog-fill" style="width:0%"></div>
+      <div id="prog-thumb" style="left:0%"></div>
+    </div>
+    <span id="prog-total"></span>
+  </div>
 </div>
 
-<!-- QUOTES PANEL -->
+<!-- Panneau citations (overlay) -->
 <aside id="qpanel">
   <div id="qp-hdr">
-    <h3>Citations</h3>
-    <span id="qp-cnt"></span>
-    <button class="tbtn" onclick="toggleQuotes()">✕</button>
+    <h3>Citations</h3><span id="qp-cnt"></span>
+    <button class="rtbtn" onclick="toggleQuotes()">✕</button>
   </div>
   <div id="qlist"></div>
   <div class="qexp"><button class="btn-exp" onclick="exportQ()">↓ Exporter en .txt</button></div>
 </aside>
 
-<!-- MODAL CITATION -->
+<!-- Modal citation -->
 <div id="modal-bg">
   <div id="modal-box">
     <h3>Sauvegarder cette citation</h3>
@@ -290,497 +727,714 @@ foliate-view::part(filter){background:var(--parchment)}
 <div id="overlay" onclick="closePanels()"></div>
 <div id="toast"></div>
 
-<!--
-  ╔══════════════════════════════════════════════════════════════════╗
-  ║  IMPORTANT — foliate-js nécessite type="module"                 ║
-  ║  Le fichier foliate-js/view.js doit exister dans le repo        ║
-  ║  (git submodule add https://github.com/johnfactotum/foliate-js) ║
-  ╚══════════════════════════════════════════════════════════════════╝
--->
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPT — type="module" requis pour foliate-js
+═══════════════════════════════════════════════════════ -->
 <script type="module">
-// ─── Import foliate-js (chemin local, git submodule) ──────────────────────────
+// ── foliate-js (git submodule local) ─────────────────────────────────────────
 import './foliate-js/view.js';
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────────────────────
 const S = {
-  books: [], curBook: null, fontSize: 100, selTxt: '', quotes: [],
-  _quotesDriveId: null, _booksDriveId: null,
-  cfg: {}, fView: null,          // fView = <foliate-view> element
-  accessToken: null, folderId: null, user: null
+  books:[], curBook:null, fontSize:100, selTxt:'', quotes:[],
+  _quotesDriveId:null, _booksDriveId:null,
+  cfg:{}, fView:null,
+  accessToken:null, folderId:null, user:null,
+  progFraction:0, sortMode:'recent', readMode:'jour',
+  _searchAbort:null,
 };
 const $ = id => document.getElementById(id);
-const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-function toast(msg, ms = 2800) {
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), ms);
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function toast(msg, ms=2600) {
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),ms);
 }
 function view(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   $(id).classList.add('on');
 }
 function fmtDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
+  if(!iso)return'';
+  const d=new Date(iso);
   return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})
-    + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-}
-function setDriveStatus(ok, txt) {
-  const el = $('drive-status'); el.style.display = 'flex';
-  el.className = 'drive-status ' + (ok ? 'ok' : 'err');
-  $('drive-status-txt').textContent = txt || 'Drive';
+    +' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
+// ── CONFIG ────────────────────────────────────────────────────────────────────
 function loadCfg() {
-  try { S.cfg = JSON.parse(localStorage.getItem('liseuse_cfg_v5') || '{}'); } catch(e) {}
+  try { S.cfg=JSON.parse(localStorage.getItem('liseuse_cfg_v7')||'{}'); } catch(e){}
+  // Lire mode lecture sauvegardé
+  S.readMode = localStorage.getItem('liseuse_mode')||'jour';
+  applyMode(S.readMode, false);
 }
 window.saveSetup = () => {
-  const clientId = $('cfg-clientid').value.trim();
-  const folder   = $('cfg-folder').value.trim() || 'Liseuse';
-  if (!clientId) { toast('Renseignez votre Client ID Google'); return; }
-  if (!clientId.includes('.apps.googleusercontent.com')) { toast('Format Client ID invalide'); return; }
-  S.cfg = { clientId, folder };
-  localStorage.setItem('liseuse_cfg_v5', JSON.stringify(S.cfg));
+  const clientId=$('cfg-clientid').value.trim();
+  const folder=$('cfg-folder').value.trim()||'Liseuse';
+  if(!clientId){toast('Renseignez votre Client ID');return;}
+  if(!clientId.includes('.apps.googleusercontent.com')){toast('Format Client ID invalide');return;}
+  S.cfg={clientId,folder};
+  localStorage.setItem('liseuse_cfg_v7',JSON.stringify(S.cfg));
   toast('Configuration sauvegardée ✓');
   initGIS(); view('view-login');
 };
 
-// ─── NAVIGATION VUES ──────────────────────────────────────────────────────────
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
 window.goLib = () => {
   view('view-lib');
-  $('btn-lib').style.display = 'none';
-  $('btn-qhdr').style.display = 'none';
+  $('btn-lib').style.display='none';
   destroyReader();
   renderGrid();
+  renderContinueBanner();
 };
 window.goCfg = () => {
-  $('cfg-clientid').value = S.cfg.clientId || '';
-  $('cfg-folder').value   = S.cfg.folder   || 'Liseuse';
+  $('cfg-clientid').value=S.cfg.clientId||'';
+  $('cfg-folder').value=S.cfg.folder||'Liseuse';
   view('view-cfg');
-  $('btn-cfg').style.display   = 'none';
-  $('btn-logout').style.display = 'none';
 };
-function destroyReader() {
-  if (S.fView) {
-    if (S.fView._onResize) window.removeEventListener('resize', S.fView._onResize);
-    S.fView.remove();
-    S.fView = null;
-  }
-}
 
-// ─── GOOGLE IDENTITY SERVICES ─────────────────────────────────────────────────
-let tokenClient = null;
-
-async function onTokenReceived(resp, silent = false) {
-  if (resp.error) { if (silent) view('view-login'); else toast('Erreur OAuth : ' + resp.error); return; }
-  S.accessToken = resp.access_token;
+// ── GOOGLE IDENTITY SERVICES ──────────────────────────────────────────────────
+let tokenClient=null;
+async function onTokenReceived(resp,silent=false) {
+  if(resp.error){if(silent)view('view-login'); else toast('Erreur OAuth : '+resp.error); return;}
+  S.accessToken=resp.access_token;
   await fetchUserProfile();
-  if (S.user?.email) localStorage.setItem('liseuse_login_hint', S.user.email);
+  if(S.user?.email) localStorage.setItem('liseuse_hint',S.user.email);
   await initDriveFolder();
   showLibUI();
   await loadBooks();
   await loadQuotesDrive();
 }
-function initGIS(thenSilent = false) {
-  if (!S.cfg.clientId) return;
-  if (typeof google === 'undefined') { setTimeout(() => initGIS(thenSilent), 300); return; }
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: S.cfg.clientId,
-    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-    callback: async resp => onTokenReceived(resp, thenSilent)
+function initGIS(thenSilent=false) {
+  if(!S.cfg.clientId)return;
+  if(typeof google==='undefined'){setTimeout(()=>initGIS(thenSilent),300);return;}
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:S.cfg.clientId,
+    scope:'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+    callback:async resp=>onTokenReceived(resp,thenSilent)
   });
-  if (thenSilent) tokenClient.requestAccessToken({ prompt: '', login_hint: localStorage.getItem('liseuse_login_hint') || '' });
+  if(thenSilent) tokenClient.requestAccessToken({prompt:'',login_hint:localStorage.getItem('liseuse_hint')||''});
 }
 window.signIn = () => {
-  if (!S.cfg.clientId) { toast('Configurez le Client ID d\'abord'); goCfg(); return; }
-  if (!tokenClient) { initGIS(); setTimeout(signIn, 500); return; }
-  tokenClient.requestAccessToken({ prompt: 'select_account', login_hint: localStorage.getItem('liseuse_login_hint') || '' });
+  if(!S.cfg.clientId){toast('Configurez le Client ID d\'abord');goCfg();return;}
+  if(!tokenClient){initGIS();setTimeout(signIn,500);return;}
+  tokenClient.requestAccessToken({prompt:'select_account',login_hint:localStorage.getItem('liseuse_hint')||''});
 };
 window.signOut = () => {
-  if (S.accessToken) google.accounts.oauth2.revoke(S.accessToken, () => {});
-  localStorage.removeItem('liseuse_login_hint');
-  Object.assign(S, { accessToken:null, folderId:null, user:null, books:[], quotes:[], _quotesDriveId:null, _booksDriveId:null });
+  if(S.accessToken) google.accounts.oauth2.revoke(S.accessToken,()=>{});
+  localStorage.removeItem('liseuse_hint');
+  Object.assign(S,{accessToken:null,folderId:null,user:null,books:[],quotes:[],_quotesDriveId:null,_booksDriveId:null});
   destroyReader();
-  ['btn-lib','btn-qhdr','btn-cfg','btn-logout','user-badge','drive-status'].forEach(id => $(id).style.display = 'none');
+  ['btn-lib','btn-cfg','btn-logout','user-badge'].forEach(id=>$(id).style.display='none');
+  $('drive-dot').className='';
   view('view-login');
 };
 async function fetchUserProfile() {
   try {
-    const r = await driveReq('https://www.googleapis.com/oauth2/v2/userinfo');
-    S.user = { name: r.given_name || r.name, email: r.email, picture: r.picture };
-    $('user-name').textContent = S.user.name;
-    $('user-avatar').src = S.user.picture;
-    $('user-badge').style.display = 'flex';
-  } catch(e) { console.warn('Profil non récupéré', e); }
+    const r=await driveReq('https://www.googleapis.com/oauth2/v2/userinfo');
+    S.user={name:r.given_name||r.name,email:r.email,picture:r.picture};
+    $('user-name').textContent=S.user.name;
+    $('user-avatar').src=S.user.picture;
+    $('user-badge').style.display='flex';
+  } catch(e){console.warn('Profil non récupéré',e);}
 }
 function showLibUI() {
-  $('btn-lib').style.display   = 'none';
-  $('btn-qhdr').style.display  = 'none';
-  $('btn-cfg').style.display   = 'inline-block';
-  $('btn-logout').style.display = 'inline-block';
+  $('btn-cfg').style.display='inline-block';
+  $('btn-logout').style.display='inline-block';
   view('view-lib');
 }
 
-// ─── DRIVE API ────────────────────────────────────────────────────────────────
-async function driveReq(url, opts = {}) {
-  const r = await fetch(url, { ...opts, headers: { 'Authorization':'Bearer '+S.accessToken, ...(opts.headers||{}) } });
-  if (r.status === 401) { toast('Session expirée'); signOut(); throw new Error('401'); }
-  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || r.status); }
+// ── DRIVE API ─────────────────────────────────────────────────────────────────
+async function driveReq(url,opts={}) {
+  const r=await fetch(url,{...opts,headers:{'Authorization':'Bearer '+S.accessToken,...(opts.headers||{})}});
+  if(r.status===401){toast('Session expirée');signOut();throw new Error('401');}
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||r.status);}
   return r.json();
 }
-async function driveReqRaw(url, opts = {}) {
-  const r = await fetch(url, { ...opts, headers: { 'Authorization':'Bearer '+S.accessToken, ...(opts.headers||{}) } });
-  if (r.status === 401) { toast('Session expirée'); signOut(); throw new Error('401'); }
-  if (!r.ok) throw new Error(r.status);
+async function driveReqRaw(url,opts={}) {
+  const r=await fetch(url,{...opts,headers:{'Authorization':'Bearer '+S.accessToken,...(opts.headers||{})}});
+  if(r.status===401){toast('Session expirée');signOut();throw new Error('401');}
+  if(!r.ok)throw new Error(r.status);
   return r;
 }
 async function initDriveFolder() {
-  const name = S.cfg.folder || 'Liseuse';
-  setDriveStatus(false, 'Connexion…');
+  const name=S.cfg.folder||'Liseuse';
+  $('drive-dot').className='';
   try {
-    const q = `mimeType='application/vnd.google-apps.folder' and name='${name}' and trashed=false`;
-    const res = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
-    S.folderId = res.files?.length ? res.files[0].id
-      : (await driveReq('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder'})})).id;
-    const q2 = `mimeType='application/vnd.google-apps.folder' and name='books' and '${S.folderId}' in parents and trashed=false`;
-    const res2 = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q2)}&fields=files(id)`);
-    if (!res2.files?.length) await driveReq('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'books',mimeType:'application/vnd.google-apps.folder',parents:[S.folderId]})});
-    setDriveStatus(true,'Drive OK');
-  } catch(e) { setDriveStatus(false,'Drive KO'); toast('Erreur Drive : '+e.message); }
+    const q=`mimeType='application/vnd.google-apps.folder' and name='${name}' and trashed=false`;
+    const res=await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
+    S.folderId=res.files?.length?res.files[0].id
+      :(await driveReq('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder'})})).id;
+    const q2=`mimeType='application/vnd.google-apps.folder' and name='books' and '${S.folderId}' in parents and trashed=false`;
+    const r2=await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q2)}&fields=files(id)`);
+    if(!r2.files?.length) await driveReq('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'books',mimeType:'application/vnd.google-apps.folder',parents:[S.folderId]})});
+    $('drive-dot').className='ok';
+  } catch(e){$('drive-dot').className='err';toast('Erreur Drive : '+e.message);}
 }
 async function driveGetJson(filename) {
   try {
-    const q = `name='${filename}' and '${S.folderId}' in parents and trashed=false`;
-    const res = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
-    if (!res.files?.length) return { data:null, id:null };
-    const fileId = res.files[0].id;
-    const r = await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-    return { data: await r.json(), id: fileId };
-  } catch(e) { return { data:null, id:null }; }
+    const q=`name='${filename}' and '${S.folderId}' in parents and trashed=false`;
+    const res=await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
+    if(!res.files?.length)return{data:null,id:null};
+    const r=await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${res.files[0].id}?alt=media`);
+    return{data:await r.json(),id:res.files[0].id};
+  }catch(e){return{data:null,id:null};}
 }
-async function driveSaveJson(filename, data, existingId) {
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const form = new FormData();
-  if (existingId) {
-    form.append('metadata', new Blob(['{}'],{type:'application/json'}));
-    form.append('file', blob);
-    const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`,{method:'PATCH',headers:{'Authorization':'Bearer '+S.accessToken},body:form});
-    if (!r.ok) throw new Error(r.status); return existingId;
-  } else {
-    form.append('metadata', new Blob([JSON.stringify({name:filename,parents:[S.folderId]})],{type:'application/json'}));
-    form.append('file', blob);
-    const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Authorization':'Bearer '+S.accessToken},body:form});
-    if (!r.ok) throw new Error(r.status); return (await r.json()).id;
+async function driveSaveJson(filename,data,existingId) {
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const form=new FormData();
+  if(existingId){
+    form.append('metadata',new Blob(['{}'],{type:'application/json'}));
+    form.append('file',blob);
+    const r=await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`,{method:'PATCH',headers:{'Authorization':'Bearer '+S.accessToken},body:form});
+    if(!r.ok)throw new Error(r.status);return existingId;
+  }else{
+    form.append('metadata',new Blob([JSON.stringify({name:filename,parents:[S.folderId]})],{type:'application/json'}));
+    form.append('file',blob);
+    const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Authorization':'Bearer '+S.accessToken},body:form});
+    if(!r.ok)throw new Error(r.status);return(await r.json()).id;
   }
 }
 
-// ─── LIVRES ───────────────────────────────────────────────────────────────────
+// ── LIVRES ────────────────────────────────────────────────────────────────────
 async function loadBooks() {
-  try { const {data,id} = await driveGetJson('books.json'); S.books = Array.isArray(data)?data:[]; S._booksDriveId=id; }
-  catch(e) { S.books=[]; }
-  renderGrid();
+  try{const{data,id}=await driveGetJson('books.json');S.books=Array.isArray(data)?data:[];S._booksDriveId=id;}
+  catch(e){S.books=[];}
+  renderGrid(); renderContinueBanner();
 }
 async function saveBooks() {
-  try { S._booksDriveId = await driveSaveJson('books.json',S.books,S._booksDriveId); }
-  catch(e) { toast('Erreur catalogue : '+e.message); }
+  try{S._booksDriveId=await driveSaveJson('books.json',S.books,S._booksDriveId);}
+  catch(e){toast('Erreur catalogue : '+e.message);}
 }
-window.filterBooks = () => renderGrid($('lib-search').value.toLowerCase());
+window.filterBooks=()=>renderGrid($('lib-search').value.toLowerCase());
+window.sortBooks=()=>{S.sortMode=$('lib-sort').value;renderGrid($('lib-search').value.toLowerCase());};
+
+function getSortedBooks(list) {
+  const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+  switch(S.sortMode){
+    case'title':  return[...list].sort((a,b)=>a.title.localeCompare(b.title,'fr'));
+    case'author': return[...list].sort((a,b)=>(a.author||'').localeCompare(b.author||'','fr'));
+    case'progress':return[...list].sort((a,b)=>((prog[b.id]?.pct||0)-(prog[a.id]?.pct||0)));
+    default:      return list; // recent = ordre d'insertion
+  }
+}
+
 function renderGrid(q='') {
-  const grid = $('books-grid');
-  const list = q ? S.books.filter(b=>b.title.toLowerCase().includes(q)) : S.books;
-  if (!list.length) { grid.innerHTML='<div class="empty-lib"><div class="ei">📚</div>Aucun livre. Glissez un fichier .epub ci-dessus.</div>'; return; }
-  const prog = JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-  grid.innerHTML = list.map(b=>{
-    const p = prog[b.id]||{pct:0};
-    return `<div class="bcard" onclick="openBook('${b.id}')">
-      <div class="bcard-spine"></div>
-      <button class="bcard-del" onclick="event.stopPropagation();delBook('${b.id}')" title="Supprimer">✕</button>
-      <div class="bcard-ico">📖</div>
+  const grid=$('books-grid');
+  let list=q?S.books.filter(b=>
+    b.title.toLowerCase().includes(q)||(b.author||'').toLowerCase().includes(q)
+  ):S.books;
+  list=getSortedBooks(list);
+  if(!list.length){
+    grid.innerHTML='<div class="empty-lib"><div class="ei">📚</div><p>Aucun livre dans votre bibliothèque.<br>Cliquez sur <strong>+ Ajouter</strong> pour importer un .epub.</p></div>';
+    return;
+  }
+  const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+  grid.innerHTML=list.map(b=>{
+    const p=prog[b.id]||{pct:0};
+    const coverHtml=b.coverUrl
+      ?`<img class="bcard-cover" src="${esc(b.coverUrl)}" alt="" loading="lazy">`
+      :`<div class="bcard-cover-placeholder"><div class="ph-icon">📖</div><div class="ph-title">${esc(b.title)}</div></div>`;
+    const lastRead=p.pct>0?`<div class="bcard-pct">${p.pct}%</div>`:'';
+    return`<div class="bcard" onclick="openBook('${b.id}')">
+      <div class="bcard-cover-wrap">
+        ${coverHtml}
+        <div class="bcard-prog-overlay"><div class="bcard-prog-bar" style="width:${p.pct}%"></div></div>
+        <div class="bcard-actions">
+          <button class="bcard-action-btn" onclick="event.stopPropagation();delBook('${b.id}')" title="Supprimer">✕</button>
+        </div>
+      </div>
       <div class="bcard-title">${esc(b.title)}</div>
-      <div class="bcard-meta">EPUB</div>
-      <div class="bcard-prog"><div class="bcard-bar" style="width:${p.pct||0}%"></div></div>
+      <div class="bcard-author">${esc(b.author||'')}</div>
+      ${lastRead}
     </div>`;
   }).join('');
 }
-window.delBook = async id => {
-  const book = S.books.find(b=>b.id===id);
-  if (!confirm('Supprimer ce livre ?')) return;
-  if (book?.driveFileId) {
-    try { await fetch(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}`,{method:'DELETE',headers:{'Authorization':'Bearer '+S.accessToken}}); }
-    catch(e) { console.warn('Suppression Drive échouée',e); }
-  }
-  S.books = S.books.filter(b=>b.id!==id);
-  await saveBooks(); renderGrid(); toast('Livre supprimé');
+
+function renderContinueBanner() {
+  const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+  // Trouver le livre lu le plus récemment (dernier dans prog avec cfi)
+  const recent=S.books.find(b=>prog[b.id]?.cfi);
+  if(!recent){$('continue-banner').style.display='none';return;}
+  const p=prog[recent.id];
+  $('continue-title').textContent=recent.title;
+  $('continue-author').textContent=recent.author||'';
+  $('continue-bar').style.width=(p.pct||0)+'%';
+  const img=$('continue-cover');
+  if(recent.coverUrl){img.src=recent.coverUrl;img.style.display='block';}
+  else img.style.display='none';
+  $('continue-banner').style.display='flex';
+  $('continue-banner')._bookId=recent.id;
+}
+window.continueReading=()=>{
+  const id=$('continue-banner')._bookId;
+  if(id) openBook(id);
 };
 
-// ─── UPLOAD ───────────────────────────────────────────────────────────────────
-window.dragOver  = e => { e.preventDefault(); $('upload-zone').classList.add('drag'); };
-window.dragLeave = () => $('upload-zone').classList.remove('drag');
-window.dropFile  = e => { e.preventDefault(); $('upload-zone').classList.remove('drag'); handleFiles(e.dataTransfer.files); };
-window.handleFiles = files => { for (const f of files) f.name.toLowerCase().endsWith('.epub') ? uploadEpub(f) : toast('Format non supporté — EPUB uniquement'); };
+window.delBook=async id=>{
+  const book=S.books.find(b=>b.id===id);
+  if(!confirm('Supprimer ce livre de la bibliothèque et du Drive ?'))return;
+  if(book?.driveFileId){
+    try{await fetch(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}`,{method:'DELETE',headers:{'Authorization':'Bearer '+S.accessToken}});}
+    catch(e){console.warn('Suppression Drive échouée',e);}
+  }
+  S.books=S.books.filter(b=>b.id!==id);
+  const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+  delete prog[id]; localStorage.setItem('liseuse_prog',JSON.stringify(prog));
+  await saveBooks(); renderGrid(); renderContinueBanner(); toast('Livre supprimé');
+};
+
+// ── UPLOAD ────────────────────────────────────────────────────────────────────
+window.dragOver=e=>{e.preventDefault();$('upload-zone').classList.add('drag');};
+window.dragLeave=()=>$('upload-zone').classList.remove('drag');
+window.dropFile=e=>{e.preventDefault();$('upload-zone').classList.remove('drag');handleFiles(e.dataTransfer.files);};
+window.handleFiles=files=>{for(const f of files)f.name.toLowerCase().endsWith('.epub')?uploadEpub(f):toast('Format non supporté — EPUB uniquement');};
 
 async function uploadEpub(file) {
-  if (!S.accessToken) { toast('Connectez-vous d\'abord'); return; }
+  if(!S.accessToken){toast('Connectez-vous d\'abord');return;}
   toast('Upload en cours…');
   try {
-    const title = await getEpubTitle(file) || file.name.replace(/\.epub$/i,'');
-    const q = `mimeType='application/vnd.google-apps.folder' and name='books' and '${S.folderId}' in parents and trashed=false`;
-    const res = await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
-    const booksFolderId = res.files?.length ? res.files[0].id : S.folderId;
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify({name:file.name,parents:[booksFolderId]})],{type:'application/json'}));
-    form.append('file', file, file.name);
-    const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Authorization':'Bearer '+S.accessToken},body:form});
-    if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||r.status); }
-    const j = await r.json();
-    S.books.unshift({ id:'drv_'+Date.now(), title, filename:file.name, driveFileId:j.id });
-    await saveBooks(); renderGrid(); toast(`« ${title} » uploadé ✓`);
-  } catch(e) { toast('Erreur upload : '+e.message); }
-}
-async function getEpubTitle(file) {
-  try {
-    // JSZip via import dynamique (pas de dépendance CDN dans le HTML)
-    const { default: JSZip } = await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
-    const zip = await JSZip.loadAsync(await file.arrayBuffer());
-    const container = zip.file('META-INF/container.xml');
-    if (!container) return null;
-    const m = (await container.async('string')).match(/full-path="([^"]+\.opf)"/i);
-    if (!m) return null;
-    const t = (await zip.file(m[1]).async('string')).match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
-    if (!t) return null;
-    try { return decodeURIComponent(escape(t[1].trim())); } catch(e) { return t[1].trim(); }
-  } catch(e) { return null; }
+    const meta=await getEpubMeta(file);
+    const title=meta.title||file.name.replace(/\.epub$/i,'');
+    const author=meta.author||'';
+    const q=`mimeType='application/vnd.google-apps.folder' and name='books' and '${S.folderId}' in parents and trashed=false`;
+    const res=await driveReq(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`);
+    const booksFolderId=res.files?.length?res.files[0].id:S.folderId;
+    const form=new FormData();
+    form.append('metadata',new Blob([JSON.stringify({name:file.name,parents:[booksFolderId]})],{type:'application/json'}));
+    form.append('file',file,file.name);
+    const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Authorization':'Bearer '+S.accessToken},body:form});
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||r.status);}
+    const j=await r.json();
+    const id='drv_'+Date.now();
+    // Stocker la cover en base64 (petite taille)
+    const coverUrl=meta.coverUrl||null;
+    S.books.unshift({id,title,author,filename:file.name,driveFileId:j.id,coverUrl});
+    await saveBooks(); renderGrid(); renderContinueBanner();
+    toast(`« ${title} » uploadé ✓`);
+  }catch(e){toast('Erreur upload : '+e.message);}
 }
 
-// ─── OUVRIR UN LIVRE — foliate-js ─────────────────────────────────────────────
-window.openBook = async id => {
-  const book = S.books.find(b=>b.id===id); if (!book) return;
-  if (!book.driveFileId) { toast('ID Drive manquant pour ce livre'); return; }
-  toast('Chargement…');
+async function getEpubMeta(file) {
+  const meta={title:null,author:null,coverUrl:null};
   try {
-    const r   = await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}?alt=media`);
-    const blob = await r.blob();
-    // foliate-js détecte le format via le nom de fichier — il faut un File, pas un Blob nu
-    const epubFile = new File([blob], book.filename || 'book.epub', { type: 'application/epub+zip' });
+    const {default:JSZip}=await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+    const zip=await JSZip.loadAsync(await file.arrayBuffer());
+    // Container → OPF path
+    const container=zip.file('META-INF/container.xml');
+    if(!container)return meta;
+    const containerXml=await container.async('string');
+    const opfMatch=containerXml.match(/full-path="([^"]+\.opf)"/i);
+    if(!opfMatch)return meta;
+    const opfPath=opfMatch[1];
+    const opfXml=await zip.file(opfPath).async('string');
+    // Titre
+    const titleM=opfXml.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
+    if(titleM)try{meta.title=decodeURIComponent(escape(titleM[1].trim()));}catch(e){meta.title=titleM[1].trim();}
+    // Auteur
+    const authorM=opfXml.match(/<dc:creator[^>]*>([^<]+)<\/dc:creator>/i);
+    if(authorM)try{meta.author=decodeURIComponent(escape(authorM[1].trim()));}catch(e){meta.author=authorM[1].trim();}
+    // Cover : chercher l'item cover dans le manifest
+    const opfDir=opfPath.includes('/')?opfPath.substring(0,opfPath.lastIndexOf('/')+1):'';
+    // Méthode 1 : meta name="cover"
+    const coverIdM=opfXml.match(/<meta[^>]+name=["']cover["'][^>]+content=["']([^"']+)["']/i)
+      || opfXml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']cover["']/i);
+    let coverPath=null;
+    if(coverIdM){
+      const coverId=coverIdM[1];
+      const itemM=opfXml.match(new RegExp(`<item[^>]+id=["']${coverId}["'][^>]+href=["']([^"']+)["']`,'i'))
+        || opfXml.match(new RegExp(`<item[^>]+href=["']([^"']+)["'][^>]+id=["']${coverId}["']`,'i'));
+      if(itemM)coverPath=opfDir+itemM[1];
+    }
+    // Méthode 2 : properties="cover-image"
+    if(!coverPath){
+      const covM=opfXml.match(/<item[^>]+properties=["'][^"']*cover-image[^"']*["'][^>]+href=["']([^"']+)["']/i)
+        || opfXml.match(/<item[^>]+href=["']([^"']+)["'][^>]+properties=["'][^"']*cover-image[^"']*["']/i);
+      if(covM)coverPath=opfDir+covM[1];
+    }
+    if(coverPath){
+      // Normaliser le chemin (supprimer ../)
+      const parts=coverPath.split('/');
+      const norm=[];
+      for(const p of parts){if(p==='..')norm.pop();else if(p&&p!=='.')norm.push(p);}
+      coverPath=norm.join('/');
+      const coverFile=zip.file(coverPath);
+      if(coverFile){
+        const coverBlob=await coverFile.async('blob');
+        // Réduire la taille : canvas resize à 120×180 max
+        const url=URL.createObjectURL(coverBlob);
+        meta.coverUrl=await resizeCover(url,120,180);
+        URL.revokeObjectURL(url);
+      }
+    }
+  }catch(e){console.warn('getEpubMeta',e);}
+  return meta;
+}
+
+function resizeCover(url,maxW,maxH){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(maxW/img.width,maxH/img.height,1);
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const c=document.createElement('canvas');
+      c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',.75));
+    };
+    img.onerror=()=>resolve(null);
+    img.src=url;
+  });
+}
+
+// ── OUVRIR UN LIVRE ───────────────────────────────────────────────────────────
+window.openBook=async id=>{
+  const book=S.books.find(b=>b.id===id);if(!book)return;
+  if(!book.driveFileId){toast('ID Drive manquant pour ce livre');return;}
+  toast('Chargement…');
+  try{
+    const r=await driveReqRaw(`https://www.googleapis.com/drive/v3/files/${book.driveFileId}?alt=media`);
+    const blob=await r.blob();
+    const epubFile=new File([blob],book.filename||'book.epub',{type:'application/epub+zip'});
 
     destroyReader();
-    S.curBook = book;
-    $('rbook-title').textContent = book.title;
-    $('btn-lib').style.display  = 'inline-block';
-    $('btn-qhdr').style.display = 'inline-block';
+    S.curBook=book;
+    $('rbook-title').textContent=book.title;
+    $('btn-lib').style.display='inline-block';
     view('view-reader');
-    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r=>requestAnimationFrame(r));
 
-    // ── Créer <foliate-view> avec dimensions explicites ──
-    const fv = document.createElement('foliate-view');
-    fv.setAttribute('max-inline-size', '720');
-    fv.setAttribute('animated', '');
-    const wrap = $('epub-wrap');
-    fv.style.width  = wrap.clientWidth  + 'px';
-    fv.style.height = wrap.clientHeight + 'px';
+    // Créer foliate-view
+    const fv=document.createElement('foliate-view');
+    fv.setAttribute('max-inline-size','720');
+    fv.setAttribute('animated','');
+    const wrap=$('epub-wrap');
+    fv.style.width=wrap.clientWidth+'px';
+    fv.style.height=wrap.clientHeight+'px';
     wrap.appendChild(fv);
+    S.fView=fv;
 
-    // Redimensionner si la fenêtre change
-    const onResize = () => {
-      fv.style.width  = wrap.clientWidth  + 'px';
-      fv.style.height = wrap.clientHeight + 'px';
-    };
-    window.addEventListener('resize', onResize);
-    fv._onResize = onResize; // mémoriser pour pouvoir le retirer plus tard
-    S.fView = fv;
+    // Resize handler
+    const onResize=()=>{fv.style.width=wrap.clientWidth+'px';fv.style.height=wrap.clientHeight+'px';};
+    window.addEventListener('resize',onResize);
+    fv._onResize=onResize;
 
-    // ── Ouvrir l'epub ──
     await fv.open(epubFile);
 
-    // ── Table des matières ──
-    // foliate-js expose book.toc comme une Promise ou tableau selon la version
-    const loadToc = async () => {
-      try {
-        const toc = await fv.book?.toc;
-        if (Array.isArray(toc) && toc.length) renderToc(toc);
-      } catch(e) {}
-    };
-    fv.addEventListener('load', loadToc, { once: true });
-    loadToc(); // essai immédiat si déjà dispo
+    // TDM
+    fv.addEventListener('load',async()=>{
+      try{const toc=await fv.book?.toc;if(Array.isArray(toc)&&toc.length)renderToc(toc);}catch(e){}
+    },{once:true});
+    try{const toc=await fv.book?.toc;if(Array.isArray(toc)&&toc.length)renderToc(toc);}catch(e){}
 
-    // ── Restaurer la progression ──
-    const prog  = JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-    const saved = prog[id];
-    if (saved?.cfi) { try { await fv.goTo(saved.cfi); } catch(e) {} }
+    // Restaurer progression
+    const prog=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+    const saved=prog[id];
+    if(saved?.cfi){try{await fv.goTo(saved.cfi);}catch(e){}}
 
-    // ── Événement relocate (progression + sauvegarde CFI) ──
-    fv.addEventListener('relocate', e => {
-      const loc = e.detail;
-      const pct = Math.round((loc.fraction ?? 0) * 100);
-      $('epub-progress-bar').style.width = pct + '%';
-      const p = JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
-      p[id] = { cfi: loc.cfi, pct };
-      localStorage.setItem('liseuse_prog', JSON.stringify(p));
-      // Surligner le chapitre dans la TDM
-      if (loc.tocItem?.href) highlightToc(loc.tocItem.href);
+    // Relocate
+    fv.addEventListener('relocate',e=>{
+      const loc=e.detail;
+      const pct=Math.round((loc.fraction??0)*100);
+      S.progFraction=loc.fraction??0;
+      updateProgBar(S.progFraction);
+      $('prog-current').textContent=pct+'%';
+      const p=JSON.parse(localStorage.getItem('liseuse_prog')||'{}');
+      p[id]={cfi:loc.cfi,pct};
+      localStorage.setItem('liseuse_prog',JSON.stringify(p));
+      if(loc.tocItem?.href)highlightToc(loc.tocItem.href);
     });
 
-    applyFontSize();
+    applyFontStyle();
     renderQPanel();
     toast('');
-  } catch(e) { toast('Erreur : '+e.message); console.error(e); }
+  }catch(e){toast('Erreur : '+e.message);console.error(e);}
 };
 
-// ─── TABLE DES MATIÈRES ───────────────────────────────────────────────────────
-function renderToc(toc, level = 0) {
-  if (!level) $('toc-list').innerHTML = '';
-  for (const item of toc) {
-    const div = document.createElement('div');
-    div.className = 'toc-item' + (level ? ' sub' : '');
-    div.textContent = item.label.trim();
-    div.dataset.href = item.href || '';
-    div.onclick = () => { if (S.fView) S.fView.goTo(item.href); closePanels(); };
-    $('toc-list').appendChild(div);
-    if (item.subitems?.length) renderToc(item.subitems, level + 1);
+function destroyReader(){
+  if(S.fView){
+    if(S.fView._onResize)window.removeEventListener('resize',S.fView._onResize);
+    S.fView.remove();S.fView=null;
+  }
+  // Reset recherche
+  closeSearch();
+  $('theme-panel').classList.remove('open');
+}
+
+// ── TABLE DES MATIÈRES ────────────────────────────────────────────────────────
+function renderToc(toc,level=0){
+  if(!level)$('toc-list').innerHTML='';
+  for(const item of toc){
+    const d=document.createElement('div');
+    d.className='toc-item'+(level?' sub':'');
+    d.textContent=item.label.trim();
+    d.dataset.href=item.href||'';
+    d.onclick=()=>{if(S.fView)S.fView.goTo(item.href);closeSidebar();};
+    $('toc-list').appendChild(d);
+    if(item.subitems?.length)renderToc(item.subitems,level+1);
   }
 }
-function highlightToc(href) {
-  document.querySelectorAll('.toc-item').forEach(el =>
-    el.classList.toggle('on', !!(href && el.dataset.href && href.includes(el.dataset.href)))
+function highlightToc(href){
+  document.querySelectorAll('.toc-item').forEach(el=>
+    el.classList.toggle('on',!!(href&&el.dataset.href&&href.includes(el.dataset.href)))
   );
 }
 
-// ─── NAVIGATION PAGE ──────────────────────────────────────────────────────────
-window.epubPrev = () => { if (S.fView) S.fView.prev(); };
-window.epubNext = () => { if (S.fView) S.fView.next(); };
+// ── NAVIGATION PAGE ───────────────────────────────────────────────────────────
+window.epubPrev=()=>{if(S.fView)S.fView.prev();};
+window.epubNext=()=>{if(S.fView)S.fView.next();};
 
-document.addEventListener('keydown', e => {
-  if (!$('view-reader').classList.contains('on')) return;
-  if ($('modal-bg').classList.contains('open')) return;
-  if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); epubNext(); }
-  if (e.key === 'ArrowLeft'  || e.key === 'PageUp')   { e.preventDefault(); epubPrev(); }
-  if (e.key === 'Escape') { closeModal(); closePanels(); }
+document.addEventListener('keydown',e=>{
+  if(!$('view-reader').classList.contains('on'))return;
+  if($('modal-bg').classList.contains('open'))return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();epubNext();}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();epubPrev();}
+  if(e.key==='Escape'){closeModal();closePanels();closeSearch();}
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closePanels(); } });
 
-// ─── SWIPE TACTILE ────────────────────────────────────────────────────────────
-// foliate-view gère le swipe nativement dans son renderer.
-// Ce listener couvre les zones hors-renderer (marges, topbar, barre de prog).
-let _sx = 0, _sy = 0;
-document.addEventListener('touchstart', e => { _sx = e.touches[0].clientX; _sy = e.touches[0].clientY; }, { passive:true });
-document.addEventListener('touchend', e => {
-  if (!$('view-reader').classList.contains('on')) return;
-  if ($('modal-bg').classList.contains('open')) return;
-  const dx = e.changedTouches[0].clientX - _sx;
-  const dy = e.changedTouches[0].clientY - _sy;
-  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-    dx < 0 ? epubNext() : epubPrev();
-  }
-}, { passive:true });
+// Swipe (fallback document)
+let _sx=0,_sy=0;
+document.addEventListener('touchstart',e=>{_sx=e.touches[0].clientX;_sy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(!$('view-reader').classList.contains('on'))return;
+  if($('modal-bg').classList.contains('open'))return;
+  const dx=e.changedTouches[0].clientX-_sx;
+  const dy=e.changedTouches[0].clientY-_sy;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){dx<0?epubNext():epubPrev();}
+},{passive:true});
 
-// ─── TAILLE DE POLICE ─────────────────────────────────────────────────────────
-// foliate-js expose renderer.setStyles() pour injecter du CSS dans le livre
-function applyFontSize() {
-  if (!S.fView?.renderer) return;
-  try {
+// ── BARRE DE PROGRESSION TACTILE ─────────────────────────────────────────────
+function updateProgBar(fraction){
+  const pct=(fraction*100).toFixed(1)+'%';
+  $('prog-fill').style.width=pct;
+  $('prog-thumb').style.left=pct;
+}
+
+function progTrackSeek(clientX){
+  const track=$('prog-track');
+  const rect=track.getBoundingClientRect();
+  const fraction=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+  updateProgBar(fraction);
+  if(S.fView) S.fView.goTo(fraction); // foliate-js accepte une fraction 0-1
+}
+
+const progTrack=$('prog-track');
+let progDragging=false;
+progTrack.addEventListener('pointerdown',e=>{
+  progDragging=true;progTrack.setPointerCapture(e.pointerId);
+  progTrackSeek(e.clientX);
+});
+progTrack.addEventListener('pointermove',e=>{if(progDragging)progTrackSeek(e.clientX);});
+progTrack.addEventListener('pointerup',()=>{progDragging=false;});
+progTrack.addEventListener('click',e=>progTrackSeek(e.clientX));
+
+// ── MODES LECTURE ─────────────────────────────────────────────────────────────
+function applyMode(mode,save=true){
+  document.body.classList.remove('mode-sepia','mode-night');
+  if(mode==='sepia')document.body.classList.add('mode-sepia');
+  if(mode==='night')document.body.classList.add('mode-night');
+  // Mettre à jour les boutons
+  ['jour','sepia','night'].forEach(m=>{
+    const btn=$('mode-'+m);
+    if(btn)btn.classList.toggle('active',m===mode);
+  });
+  S.readMode=mode;
+  if(save)localStorage.setItem('liseuse_mode',mode);
+  // Réappliquer le style de police si le livre est ouvert
+  if(S.fView)applyFontStyle();
+}
+window.setMode=mode=>{applyMode(mode);$('theme-panel').classList.remove('open');};
+window.toggleThemePanel=()=>$('theme-panel').classList.toggle('open');
+
+// ── POLICE ────────────────────────────────────────────────────────────────────
+function applyFontStyle(){
+  if(!S.fView?.renderer)return;
+  const bg=S.readMode==='night'?'#1a1814':S.readMode==='sepia'?'#f5f0e8':'#faf8f4';
+  const fg=S.readMode==='night'?'#d4cabb':'#1a1208';
+  try{
     S.fView.renderer.setStyles?.(`
-      * { font-size: ${S.fontSize}% !important; }
-      body { font-family: 'Crimson Pro', Georgia, serif !important; line-height: 1.85 !important; }
-      p { text-align: justify !important; }
+      html,body{background:${bg}!important;color:${fg}!important}
+      body{font-family:'Playfair Display',Georgia,serif!important;font-size:${S.fontSize}%!important;line-height:1.9!important}
+      p{text-align:justify!important;margin-bottom:.5em!important}
+      a{color:${S.readMode==='night'?'#c9933a':'#8b3a1a'}!important}
     `);
-  } catch(e) { console.warn('setStyles non disponible', e); }
+  }catch(e){}
 }
-window.chFont = d => {
-  S.fontSize = Math.max(80, Math.min(150, S.fontSize + d * 10));
-  $('font-sz').textContent = S.fontSize + '%';
-  applyFontSize();
+window.chFont=d=>{
+  S.fontSize=Math.max(70,Math.min(160,S.fontSize+d*10));
+  $('font-sz').textContent=S.fontSize+'%';
+  applyFontStyle();
 };
 
-// ─── CITATIONS ────────────────────────────────────────────────────────────────
-window.tryQuote = () => {
-  if (!S.fView) { toast('Ouvrez un livre d\'abord'); return; }
-  // Récupérer la sélection dans le renderer de foliate-js
-  let sel = '';
-  try { sel = S.fView.renderer?.getAnnotationRange?.()?.toString?.()?.trim() || ''; } catch(e) {}
-  if (!sel) sel = window.getSelection()?.toString?.()?.trim() || '';
-  if (!sel) { toast('Sélectionnez du texte dans le livre'); return; }
-  S.selTxt = sel;
-  $('modal-exc').textContent = sel.substring(0,500) + (sel.length > 500 ? '…' : '');
-  $('modal-note').value = '';
-  $('modal-bg').classList.add('open');
-  setTimeout(() => $('modal-note').focus(), 100);
-};
-window.closeModal = () => $('modal-bg').classList.remove('open');
-window.commitQ = async () => {
-  const note    = $('modal-note').value.trim();
-  const chTitle = document.querySelector('.toc-item.on')?.textContent || '—';
-  const q = {
-    id: Date.now()+'_'+Math.random().toString(36).slice(2,7),
-    date: new Date().toISOString(),
-    bookId: S.curBook.id, book: S.curBook.title, chapter: chTitle, text: S.selTxt, note
-  };
-  S.quotes.unshift(q); closeModal(); renderQPanel();
-  toast(await saveQuotesDrive() ? 'Citation sauvegardée ✓' : 'Erreur sauvegarde Drive');
-};
-window.delQ = async id => {
-  S.quotes = S.quotes.filter(q=>q.id!==id);
-  renderQPanel(); await saveQuotesDrive(); toast('Supprimée');
-};
-function renderQPanel() {
-  const list = S.curBook ? S.quotes.filter(q=>q.bookId===S.curBook.id) : S.quotes;
-  $('qp-cnt').textContent = list.length ? `(${list.length})` : '';
-  if (!list.length) {
-    $('qlist').innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--ink-pale);font-size:.82rem">Aucune citation.<br><br>Sélectionnez du texte<br>puis cliquez sur ❝</div>';
-    return;
+// ── RECHERCHE DANS LE LIVRE ───────────────────────────────────────────────────
+window.toggleSearch=()=>{
+  const p=$('search-panel');
+  if(p.classList.toggle('open')){
+    $('btn-search-toggle').classList.add('active');
+    setTimeout(()=>$('search-input').focus(),100);
+    // Ajuster le layout pour faire de la place
+    $('rlayout').style.marginTop='50px';
+  }else{
+    closeSearch();
   }
-  $('qlist').innerHTML = list.map(q=>`
-    <div class="qcard">
-      <button class="qdel" onclick="delQ('${q.id}')">✕</button>
-      <div class="qtxt">${esc(q.text)}</div>
-      <div class="qmeta">${esc(q.chapter)}<br>${fmtDate(q.date)}</div>
-      ${q.note ? `<div class="qnote">📝 ${esc(q.note)}</div>` : ''}
-    </div>`).join('');
+};
+function closeSearch(){
+  $('search-panel').classList.remove('open');
+  $('btn-search-toggle').classList.remove('active');
+  $('search-results').innerHTML='';
+  $('search-status').textContent='';
+  $('search-input').value='';
+  if(S._searchAbort){S._searchAbort.abort();S._searchAbort=null;}
 }
-window.exportQ = () => {
-  const list = S.curBook ? S.quotes.filter(q=>q.bookId===S.curBook.id) : S.quotes;
-  if (!list.length) { toast('Aucune citation'); return; }
-  const txt = list.map(q=>`[${q.book} — ${q.chapter}] ${fmtDate(q.date)}\n"${q.text}"${q.note?'\n📝 '+q.note:''}`).join('\n\n───────────────────\n\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download = `citations_${S.curBook?S.curBook.title:'export'}.txt`;
+window.closeSearch=closeSearch;
+
+window.doSearch=async()=>{
+  const q=$('search-input').value.trim();
+  if(!q){$('search-results').innerHTML='';$('search-status').textContent='';return;}
+  if(!S.fView?.book){toast('Aucun livre ouvert');return;}
+
+  if(S._searchAbort){S._searchAbort.abort();}
+  const abort=new AbortController();
+  S._searchAbort=abort;
+
+  $('search-status').textContent='Recherche…';
+  $('search-results').innerHTML='';
+
+  try{
+    // foliate-js search.js est utilisé en interne par view.js
+    // On accède via fView.search() si disponible, sinon via l'API book
+    const results=[];
+    const generator=S.fView.search({query:q,index:0});
+    for await(const result of generator){
+      if(abort.signal.aborted)return;
+      results.push(result);
+      // Afficher les résultats incrémentalement
+      renderSearchResult(result,q);
+      if(results.length>=50)break;
+    }
+    $('search-status').textContent=results.length?`${results.length} résultat(s)${results.length>=50?' (limité)':''}`:` Aucun résultat pour « ${q} »`;
+  }catch(e){
+    if(e.name!=='AbortError')$('search-status').textContent='Erreur de recherche';
+  }
+};
+
+function renderSearchResult(result,q){
+  const div=document.createElement('div');
+  div.className='sres';
+  // Extraire le texte autour du match
+  let excerpt=result.excerpt||result.cfi||'';
+  if(result.excerpt){
+    // Surligner la requête dans l'extrait
+    const regex=new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    excerpt=esc(excerpt).replace(regex,'<mark>$1</mark>');
+    div.innerHTML=excerpt;
+  }else{
+    div.textContent=result.label||result.cfi||'Résultat';
+  }
+  div.onclick=()=>{
+    if(S.fView&&result.cfi)S.fView.goTo(result.cfi);
+  };
+  $('search-results').appendChild(div);
+}
+
+// ── CITATIONS ─────────────────────────────────────────────────────────────────
+window.tryQuote=()=>{
+  if(!S.fView){toast('Ouvrez un livre d\'abord');return;}
+  let sel='';
+  try{sel=S.fView.renderer?.getAnnotationRange?.()?.toString?.()?.trim()||'';}catch(e){}
+  if(!sel)sel=window.getSelection()?.toString?.()?.trim()||'';
+  if(!sel){toast('Sélectionnez du texte dans le livre');return;}
+  S.selTxt=sel;
+  $('modal-exc').textContent=sel.substring(0,500)+(sel.length>500?'…':'');
+  $('modal-note').value='';
+  $('modal-bg').classList.add('open');
+  setTimeout(()=>$('modal-note').focus(),100);
+};
+window.closeModal=()=>$('modal-bg').classList.remove('open');
+window.commitQ=async()=>{
+  const note=$('modal-note').value.trim();
+  const chTitle=document.querySelector('.toc-item.on')?.textContent||'—';
+  const q={
+    id:Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    date:new Date().toISOString(),
+    bookId:S.curBook.id,book:S.curBook.title,chapter:chTitle,text:S.selTxt,note
+  };
+  S.quotes.unshift(q);closeModal();renderQPanel();
+  toast(await saveQuotesDrive()?'Citation sauvegardée ✓':'Erreur sauvegarde Drive');
+};
+window.delQ=async id=>{
+  S.quotes=S.quotes.filter(q=>q.id!==id);
+  renderQPanel();await saveQuotesDrive();toast('Supprimée');
+};
+
+function renderQPanel(){
+  const bookList=S.curBook?S.quotes.filter(q=>q.bookId===S.curBook.id):S.quotes;
+  $('qp-cnt').textContent=bookList.length?`(${bookList.length})`:'';
+  const html=bookList.length
+    ?bookList.map(q=>`<div class="qcard">
+        <button class="qdel" onclick="delQ('${q.id}')">✕</button>
+        <div class="qtxt">${esc(q.text)}</div>
+        <div class="qmeta">${esc(q.chapter)}<br>${fmtDate(q.date)}</div>
+        ${q.note?`<div class="qnote">📝 ${esc(q.note)}</div>`:''}
+      </div>`).join('')
+    :'<div style="text-align:center;padding:32px 14px;color:#9a8e7a;font-size:.82rem">Aucune citation.<br>Sélectionnez du texte puis ❝</div>';
+  $('qlist').innerHTML=html;
+  $('sb-qlist').innerHTML=html;
+}
+
+window.exportQ=()=>{
+  const list=S.curBook?S.quotes.filter(q=>q.bookId===S.curBook.id):S.quotes;
+  if(!list.length){toast('Aucune citation');return;}
+  const txt=list.map(q=>`[${q.book} — ${q.chapter}] ${fmtDate(q.date)}\n"${q.text}"${q.note?'\n📝 '+q.note:''}`).join('\n\n───────────────────\n\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download=`citations_${S.curBook?S.curBook.title:'export'}.txt`;
   a.click();
 };
-async function loadQuotesDrive() {
-  if (!S.accessToken) return;
-  try { const {data,id} = await driveGetJson('citations.json'); S.quotes=Array.isArray(data)?data:[]; S._quotesDriveId=id; }
-  catch(e) { S.quotes=[]; }
+
+async function loadQuotesDrive(){
+  if(!S.accessToken)return;
+  try{const{data,id}=await driveGetJson('citations.json');S.quotes=Array.isArray(data)?data:[];S._quotesDriveId=id;}
+  catch(e){S.quotes=[];}
   renderQPanel();
 }
-async function saveQuotesDrive() {
-  if (!S.accessToken) return false;
-  try { S._quotesDriveId = await driveSaveJson('citations.json',S.quotes,S._quotesDriveId); return true; }
-  catch(e) { toast('Erreur Drive : '+e.message); return false; }
+async function saveQuotesDrive(){
+  if(!S.accessToken)return false;
+  try{S._quotesDriveId=await driveSaveJson('citations.json',S.quotes,S._quotesDriveId);return true;}
+  catch(e){toast('Erreur Drive : '+e.message);return false;}
 }
 
-// ─── PANNEAUX ─────────────────────────────────────────────────────────────────
-window.toggleSidebar = () => {
+// ── PANNEAUX ──────────────────────────────────────────────────────────────────
+function closeSidebar(){
+  $('sidebar').classList.remove('open');
+  $('overlay').classList.remove('show');
+}
+window.toggleSidebar=()=>{
   const s=$('sidebar'),o=$('overlay');
-  s.classList.toggle('open') ? o.classList.add('show') : o.classList.remove('show');
+  s.classList.toggle('open')?o.classList.add('show'):o.classList.remove('show');
 };
-window.toggleQuotes = () => {
+window.toggleQuotes=()=>{
   const p=$('qpanel'),o=$('overlay');
-  p.classList.toggle('open') ? o.classList.add('show') : o.classList.remove('show');
-  if (p.classList.contains('open')) renderQPanel();
+  p.classList.toggle('open')?o.classList.add('show'):o.classList.remove('show');
+  if(p.classList.contains('open'))renderQPanel();
 };
-window.closePanels = () => {
+window.closePanels=()=>{
   $('sidebar').classList.remove('open');
   $('qpanel').classList.remove('open');
   $('overlay').classList.remove('show');
 };
-$('modal-note').addEventListener('keydown', e => { if (e.key==='Enter' && e.ctrlKey) commitQ(); });
+window.switchSbTab=tab=>{
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.toggle('on',t.dataset.panel===tab));
+  document.querySelectorAll('.sb-panel').forEach(p=>p.classList.toggle('on',p.id==='sb-'+tab));
+};
+$('modal-note').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)commitQ();});
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 loadCfg();
-if (S.cfg.clientId) {
-  window.addEventListener('load', () => { view('view-login'); initGIS(true); });
-} else {
+if(S.cfg.clientId){
+  window.addEventListener('load',()=>{view('view-login');initGIS(true);});
+}else{
   view('view-cfg');
 }
 </script>
