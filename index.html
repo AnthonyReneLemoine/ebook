@@ -333,8 +333,95 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
 #epub-wrap{
   flex:1;overflow:hidden;background:var(--reader-bg);
   display:flex;flex-direction:column;
+  position:relative;
 }
 foliate-view{flex:1;width:100%;min-height:0;display:block}
+
+/* ── EFFET FOLD ─────────────────────────────────────────────────────
+   Deux demi-panneaux qui partent des bords vers le centre (fold-out)
+   puis reviennent du centre vers les bords (unfold-in).
+   Chaque panneau est un dégradé simulant une ombre de pliage.
+   ---------------------------------------------------------------- */
+#fold-overlay{
+  position:absolute;inset:0;
+  pointer-events:none;z-index:50;
+  display:flex;
+  opacity:0;
+  /* pas de transition ici — géré par les classes JS */
+}
+#fold-left,#fold-right{
+  flex:1;height:100%;
+  transform-origin:center;
+  will-change:transform,opacity;
+}
+/* Côté gauche : se plie vers la droite (rotateY positif = ferme vers nous) */
+#fold-left{
+  background:linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,.04) 60%,
+    rgba(0,0,0,.18) 85%,
+    rgba(0,0,0,.32) 100%
+  );
+  transform-origin:right center;
+  border-right:1px solid rgba(0,0,0,.08);
+}
+/* Côté droit : se plie vers la gauche */
+#fold-right{
+  background:linear-gradient(to left,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,.04) 60%,
+    rgba(0,0,0,.18) 85%,
+    rgba(0,0,0,.32) 100%
+  );
+  transform-origin:left center;
+  border-left:1px solid rgba(0,0,0,.08);
+}
+
+/* Phase 1 — fold out : les panneaux se referment vers le centre */
+@keyframes foldOut-left{
+  from{transform:rotateY(0deg);opacity:1}
+  to  {transform:rotateY(-90deg);opacity:.3}
+}
+@keyframes foldOut-right{
+  from{transform:rotateY(0deg);opacity:1}
+  to  {transform:rotateY(90deg);opacity:.3}
+}
+/* Phase 2 — unfold in : les panneaux s'ouvrent depuis le centre */
+@keyframes unfoldIn-left{
+  from{transform:rotateY(-90deg);opacity:.3}
+  to  {transform:rotateY(0deg);opacity:0}
+}
+@keyframes unfoldIn-right{
+  from{transform:rotateY(90deg);opacity:.3}
+  to  {transform:rotateY(0deg);opacity:0}
+}
+
+#fold-overlay.fold-out{
+  opacity:1;
+  perspective:800px;
+}
+#fold-overlay.fold-out #fold-left{
+  animation:foldOut-left .28s cubic-bezier(.4,0,.2,1) both;
+}
+#fold-overlay.fold-out #fold-right{
+  animation:foldOut-right .28s cubic-bezier(.4,0,.2,1) both;
+}
+#fold-overlay.unfold-in{
+  opacity:1;
+  perspective:800px;
+}
+#fold-overlay.unfold-in #fold-left{
+  animation:unfoldIn-left .28s cubic-bezier(.4,0,.2,1) both;
+}
+#fold-overlay.unfold-in #fold-right{
+  animation:unfoldIn-right .28s cubic-bezier(.4,0,.2,1) both;
+}
+
+/* Couleur de fond des panneaux = fond du mode lecture */
+body.mode-night  #fold-left,
+body.mode-night  #fold-right{filter:brightness(0.4)}
+body.mode-sepia  #fold-left,
+body.mode-sepia  #fold-right{filter:sepia(.3)}
 
 /* Boutons prev/next */
 #epub-prev,#epub-next{
@@ -533,7 +620,7 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
 <div id="header">
   <div id="logo" onclick="goLib()">
     <span id="logo-icon">📚</span>
-    <span>Liseuse<span id="logo-ver">v7.3</span></span>
+    <span>Liseuse<span id="logo-ver">v7.4</span></span>
   </div>
   <div id="hdr-r">
     <div id="drive-dot" title="Drive"></div>
@@ -687,6 +774,11 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
     </nav>
     <div id="epub-wrap">
       <!-- foliate-view injecté dynamiquement -->
+    </div>
+    <!-- Overlay effet fold page -->
+    <div id="fold-overlay" aria-hidden="true">
+      <div id="fold-left"></div>
+      <div id="fold-right"></div>
     </div>
   </div>
 
@@ -1194,8 +1286,36 @@ function highlightToc(href){
 }
 
 // ── NAVIGATION PAGE ───────────────────────────────────────────────────────────
-window.epubPrev=()=>{if(S.fView)S.fView.prev();};
-window.epubNext=()=>{if(S.fView)S.fView.next();};
+// ── NAVIGATION PAGE avec effet FOLD ──────────────────────────────────────────
+// Phase 1 (fold-out, 280ms) → foliate change de page → Phase 2 (unfold-in, 280ms)
+let _folding = false;
+
+function playFold(action) {
+  if (!S.fView) return;
+  if (_folding) {
+    // Si déjà en animation, sauter directement
+    action();
+    return;
+  }
+  _folding = true;
+  const overlay = $('fold-overlay');
+
+  // Phase 1 : fermeture
+  overlay.className = 'fold-out';
+  setTimeout(() => {
+    // Changer de page au milieu de l'animation
+    action();
+    // Phase 2 : ouverture — on attend le 'relocate' ou un délai fixe
+    overlay.className = 'unfold-in';
+    setTimeout(() => {
+      overlay.className = '';
+      _folding = false;
+    }, 300);
+  }, 260);
+}
+
+window.epubPrev = () => playFold(() => S.fView.prev());
+window.epubNext = () => playFold(() => S.fView.next());
 
 document.addEventListener('keydown',e=>{
   if(!$('view-reader').classList.contains('on'))return;
@@ -1263,17 +1383,28 @@ function attachTapToFoliate(fv) {
       const doc = e.detail?.doc || fv.renderer?.doc;
       if (!doc) return;
       let tapStartX = 0, tapStartY = 0, tapStartT = 0;
+
       doc.addEventListener('touchstart', ev => {
         tapStartX = ev.touches[0].clientX;
         tapStartY = ev.touches[0].clientY;
         tapStartT = Date.now();
       }, { passive: true });
+
       doc.addEventListener('touchend', ev => {
-        const dx = Math.abs(ev.changedTouches[0].clientX - tapStartX);
-        const dy = Math.abs(ev.changedTouches[0].clientY - tapStartY);
+        const ex = ev.changedTouches[0].clientX;
+        const ey = ev.changedTouches[0].clientY;
+        const dx = ex - tapStartX;
+        const dy = ey - tapStartY;
         const dt = Date.now() - tapStartT;
-        // Tap court et immobile = toggle barres
-        if (dx < 10 && dy < 10 && dt < 300) toggleBars();
+        const adx = Math.abs(dx), ady = Math.abs(dy);
+
+        // Swipe horizontal dans l'iframe → fold
+        if (adx > 50 && adx > ady * 1.5) {
+          dx < 0 ? epubNext() : epubPrev();
+          return;
+        }
+        // Tap court → toggle barres
+        if (adx < 10 && ady < 10 && dt < 300) toggleBars();
       }, { passive: true });
     } catch(err) { /* cross-origin safety */ }
   });
