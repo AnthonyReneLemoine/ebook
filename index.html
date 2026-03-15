@@ -299,14 +299,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
 
 /* Layout lecteur */
 #rlayout{
-  margin-top:50px;height:calc(100vh - 50px - 44px);
+  margin-top:50px;
+  height:calc(100dvh - 50px - 44px);
   display:flex;position:relative;
   transition:height .3s, margin-top .3s;
 }
-#rlayout.bars-hidden{
-  margin-top:0;height:100vh;
-}
-/* Sidebar TDM */
 #sidebar{
   width:var(--sidebar-w);flex-shrink:0;
   background:#faf8f4;border-right:1px solid rgba(0,0,0,.08);
@@ -314,8 +311,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
   overflow-y:auto;z-index:100;
   transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
 }
-#rlayout.bars-hidden ~ * #sidebar,
-#sidebar.bars-adjust{top:0;bottom:0;}
 #sidebar.open{transform:translateX(0)}
 #sb-tabs{display:flex;border-bottom:1px solid rgba(0,0,0,.08)}
 .sb-tab{
@@ -1124,6 +1119,9 @@ window.openBook=async id=>{
     wrap.appendChild(fv);
     S.fView=fv;
 
+    // Injecter la détection de tap dans l'iframe foliate
+    attachTapToFoliate(fv);
+
     // Resize handler
     const onResize=()=>{fv.style.width=wrap.clientWidth+'px';fv.style.height=wrap.clientHeight+'px';};
     window.addEventListener('resize',onResize);
@@ -1215,38 +1213,34 @@ function setBarsVisible(visible) {
   const progbar = $('prog-bar-wrap');
   const layout  = $('rlayout');
   const sidebar = $('sidebar');
+  // Utiliser dvh (dynamic viewport height) si dispo, sinon vh
+  const fullH = 'calc(100dvh)';
+  const readH = 'calc(100dvh - 50px - 44px)';
   if (visible) {
     topbar.classList.remove('hidden');
     progbar.classList.remove('hidden');
     layout.style.marginTop = '50px';
-    layout.style.height    = 'calc(100vh - 50px - 44px)';
+    layout.style.height    = readH;
     sidebar.style.top      = '50px';
     sidebar.style.bottom   = '44px';
-    // Recalculer les dimensions du viewer
-    if (S.fView) {
-      const wrap = $('epub-wrap');
-      S.fView.style.width  = wrap.clientWidth  + 'px';
-      S.fView.style.height = wrap.clientHeight + 'px';
-    }
   } else {
     topbar.classList.add('hidden');
     progbar.classList.add('hidden');
     layout.style.marginTop = '0';
-    layout.style.height    = '100vh';
+    layout.style.height    = fullH;
     sidebar.style.top      = '0';
     sidebar.style.bottom   = '0';
-    if (S.fView) {
-      const wrap = $('epub-wrap');
-      setTimeout(() => {
-        S.fView.style.width  = wrap.clientWidth  + 'px';
-        S.fView.style.height = wrap.clientHeight + 'px';
-      }, 320); // après la transition CSS
-    }
   }
+  // Recalculer les dimensions foliate-view après transition
+  setTimeout(() => {
+    if (!S.fView) return;
+    const wrap = $('epub-wrap');
+    S.fView.style.width  = wrap.clientWidth  + 'px';
+    S.fView.style.height = wrap.clientHeight + 'px';
+  }, visible ? 0 : 320);
 }
 
 function toggleBars() {
-  // Ne pas toggler si un panneau est ouvert
   if ($('modal-bg').classList.contains('open')) return;
   if ($('sidebar').classList.contains('open')) return;
   if ($('qpanel').classList.contains('open')) return;
@@ -1255,24 +1249,52 @@ function toggleBars() {
   setBarsVisible(!barsVisible);
 }
 
-// Tap sur le viewer (zone centrale) → toggle barres
-// Le tap est détecté via l'event 'click' sur epub-wrap (remonte du foliate-view)
-$('epub-wrap').addEventListener('click', e => {
-  if (!$('view-reader').classList.contains('on')) return;
-  // Ignorer les clics sur les boutons prev/next
-  if (e.target === $('epub-prev') || e.target === $('epub-next')) return;
-  toggleBars();
-});
+// ── DÉTECTION TAP DANS L'IFRAME FOLIATE ───────────────────────────────────────
+// foliate-js rend le contenu dans un iframe — les events ne remontent pas.
+// On injecte les listeners directement dans le document de l'iframe à chaque
+// chargement de section (event 'load' du renderer).
+function attachTapToFoliate(fv) {
+  fv.addEventListener('load', (e) => {
+    try {
+      const doc = e.detail?.doc || fv.renderer?.doc;
+      if (!doc) return;
+      let tapStartX = 0, tapStartY = 0, tapStartT = 0;
+      doc.addEventListener('touchstart', ev => {
+        tapStartX = ev.touches[0].clientX;
+        tapStartY = ev.touches[0].clientY;
+        tapStartT = Date.now();
+      }, { passive: true });
+      doc.addEventListener('touchend', ev => {
+        const dx = Math.abs(ev.changedTouches[0].clientX - tapStartX);
+        const dy = Math.abs(ev.changedTouches[0].clientY - tapStartY);
+        const dt = Date.now() - tapStartT;
+        // Tap court et immobile = toggle barres
+        if (dx < 10 && dy < 10 && dt < 300) toggleBars();
+      }, { passive: true });
+    } catch(err) { /* cross-origin safety */ }
+  });
+}
 
-// Swipe (fallback document — zones hors iframe)
-let _sx=0,_sy=0;
-document.addEventListener('touchstart',e=>{_sx=e.touches[0].clientX;_sy=e.touches[0].clientY;},{passive:true});
+// Swipe (fallback document — zones hors iframe : marges, topbar, progbar)
+let _sx=0,_sy=0,_st=0;
+document.addEventListener('touchstart',e=>{
+  _sx=e.touches[0].clientX;_sy=e.touches[0].clientY;_st=Date.now();
+},{passive:true});
 document.addEventListener('touchend',e=>{
   if(!$('view-reader').classList.contains('on'))return;
   if($('modal-bg').classList.contains('open'))return;
   const dx=e.changedTouches[0].clientX-_sx;
   const dy=e.changedTouches[0].clientY-_sy;
-  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){dx<0?epubNext():epubPrev();}
+  const dt=Date.now()-_st;
+  // Swipe horizontal
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){dx<0?epubNext():epubPrev();return;}
+  // Tap court hors iframe (marges) → toggle barres
+  if(Math.abs(dx)<10&&Math.abs(dy)<10&&dt<300){
+    const target=e.target;
+    // Ne pas toggler si on touche les boutons prev/next ou la barre de progression
+    if(target.closest('#epub-prev,#epub-next,#prog-bar-wrap,#rtopbar'))return;
+    toggleBars();
+  }
 },{passive:true});
 
 // ── BARRE DE PROGRESSION TACTILE ─────────────────────────────────────────────
