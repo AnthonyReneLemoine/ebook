@@ -337,91 +337,75 @@ body{background:var(--bg);color:var(--text);font-family:var(--fu);font-weight:30
 }
 foliate-view{flex:1;width:100%;min-height:0;display:block}
 
-/* ── EFFET FOLD ─────────────────────────────────────────────────────
-   Deux demi-panneaux qui partent des bords vers le centre (fold-out)
-   puis reviennent du centre vers les bords (unfold-in).
-   Chaque panneau est un dégradé simulant une ombre de pliage.
-   ---------------------------------------------------------------- */
-#fold-overlay{
+/* ── EFFET CURL — coin de page qui se soulève ────────────────────────
+   Un triangle SVG en bas à droite (page suivante) ou bas à gauche
+   (page précédente) s'anime pour simuler le retournement d'un coin.
+   L'overlay est positionné en absolute sur epub-wrap.
+   ----------------------------------------------------------------- */
+#curl-overlay{
   position:absolute;inset:0;
   pointer-events:none;z-index:50;
-  display:flex;
-  opacity:0;
-  /* pas de transition ici — géré par les classes JS */
+  overflow:hidden;
 }
-#fold-left,#fold-right{
-  flex:1;height:100%;
-  transform-origin:center;
+/* Le coin = pseudo-élément carré qui pivote depuis un angle */
+#curl-corner{
+  position:absolute;
+  width:80px;height:80px;
+  bottom:0;right:0;
+  transform-origin:bottom right;
+  transform:scale(0);
+  opacity:0;
   will-change:transform,opacity;
 }
-/* Côté gauche : se plie vers la droite (rotateY positif = ferme vers nous) */
-#fold-left{
-  background:linear-gradient(to right,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,.04) 60%,
-    rgba(0,0,0,.18) 85%,
-    rgba(0,0,0,.32) 100%
+#curl-corner svg{width:100%;height:100%;display:block;}
+
+/* Ombre portée sous le coin soulevé */
+#curl-shadow{
+  position:absolute;
+  width:80px;height:80px;
+  bottom:0;right:0;
+  background:radial-gradient(ellipse at bottom right,
+    rgba(0,0,0,.22) 0%,
+    transparent 70%
   );
-  transform-origin:right center;
-  border-right:1px solid rgba(0,0,0,.08);
+  transform:scale(0);
+  opacity:0;
+  will-change:transform,opacity;
 }
-/* Côté droit : se plie vers la gauche */
-#fold-right{
-  background:linear-gradient(to left,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,.04) 60%,
-    rgba(0,0,0,.18) 85%,
-    rgba(0,0,0,.32) 100%
+
+/* Direction prev : coin bas gauche */
+#curl-overlay.prev #curl-corner,
+#curl-overlay.prev #curl-shadow{
+  right:auto;left:0;
+  transform-origin:bottom left;
+}
+#curl-overlay.prev #curl-shadow{
+  right:auto;left:0;
+  background:radial-gradient(ellipse at bottom left,
+    rgba(0,0,0,.22) 0%,
+    transparent 70%
   );
-  transform-origin:left center;
-  border-left:1px solid rgba(0,0,0,.08);
 }
 
-/* Phase 1 — fold out : les panneaux se referment vers le centre */
-@keyframes foldOut-left{
-  from{transform:rotateY(0deg);opacity:1}
-  to  {transform:rotateY(-90deg);opacity:.3}
+/* Animation : soulèvement */
+@keyframes curlUp{
+  0%  {transform:scale(0) rotate(0deg);   opacity:0}
+  40% {transform:scale(1.1) rotate(-8deg);opacity:1}
+  70% {transform:scale(1) rotate(-4deg);  opacity:1}
+  100%{transform:scale(0) rotate(0deg);   opacity:0}
 }
-@keyframes foldOut-right{
-  from{transform:rotateY(0deg);opacity:1}
-  to  {transform:rotateY(90deg);opacity:.3}
-}
-/* Phase 2 — unfold in : les panneaux s'ouvrent depuis le centre */
-@keyframes unfoldIn-left{
-  from{transform:rotateY(-90deg);opacity:.3}
-  to  {transform:rotateY(0deg);opacity:0}
-}
-@keyframes unfoldIn-right{
-  from{transform:rotateY(90deg);opacity:.3}
-  to  {transform:rotateY(0deg);opacity:0}
+@keyframes shadowUp{
+  0%  {transform:scale(0);opacity:0}
+  40% {transform:scale(1.2);opacity:1}
+  100%{transform:scale(0);opacity:0}
 }
 
-#fold-overlay.fold-out{
-  opacity:1;
-  perspective:800px;
+#curl-overlay.animating #curl-corner{
+  animation:curlUp .55s cubic-bezier(.4,0,.2,1) both;
 }
-#fold-overlay.fold-out #fold-left{
-  animation:foldOut-left .28s cubic-bezier(.4,0,.2,1) both;
+#curl-overlay.animating #curl-shadow{
+  animation:shadowUp .55s cubic-bezier(.4,0,.2,1) both;
 }
-#fold-overlay.fold-out #fold-right{
-  animation:foldOut-right .28s cubic-bezier(.4,0,.2,1) both;
-}
-#fold-overlay.unfold-in{
-  opacity:1;
-  perspective:800px;
-}
-#fold-overlay.unfold-in #fold-left{
-  animation:unfoldIn-left .28s cubic-bezier(.4,0,.2,1) both;
-}
-#fold-overlay.unfold-in #fold-right{
-  animation:unfoldIn-right .28s cubic-bezier(.4,0,.2,1) both;
-}
-
-/* Couleur de fond des panneaux = fond du mode lecture */
-body.mode-night  #fold-left,
-body.mode-night  #fold-right{filter:brightness(0.4)}
-body.mode-sepia  #fold-left,
-body.mode-sepia  #fold-right{filter:sepia(.3)}
 
 /* Boutons prev/next */
 #epub-prev,#epub-next{
@@ -620,7 +604,7 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
 <div id="header">
   <div id="logo" onclick="goLib()">
     <span id="logo-icon">📚</span>
-    <span>Liseuse<span id="logo-ver">v7.4</span></span>
+    <span>Liseuse<span id="logo-ver">v7.5</span></span>
   </div>
   <div id="hdr-r">
     <div id="drive-dot" title="Drive"></div>
@@ -775,10 +759,31 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
     <div id="epub-wrap">
       <!-- foliate-view injecté dynamiquement -->
     </div>
-    <!-- Overlay effet fold page -->
-    <div id="fold-overlay" aria-hidden="true">
-      <div id="fold-left"></div>
-      <div id="fold-right"></div>
+    <!-- Overlay effet curl coin de page -->
+    <div id="curl-overlay" aria-hidden="true">
+      <div id="curl-shadow"></div>
+      <div id="curl-corner">
+        <!-- Coin de page replié : triangle avec dégradé papier + ombre intérieure -->
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="curl-grad" x1="1" y1="1" x2="0" y2="0">
+              <stop offset="0%"  stop-color="#c8bfaf"/>
+              <stop offset="40%" stop-color="#e8e0d0"/>
+              <stop offset="100%" stop-color="#f5f0e8"/>
+            </linearGradient>
+            <linearGradient id="curl-shadow-inner" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"  stop-color="rgba(0,0,0,.25)"/>
+              <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+            </linearGradient>
+          </defs>
+          <!-- Triangle coin replié -->
+          <polygon points="0,80 80,0 80,80" fill="url(#curl-grad)"/>
+          <!-- Ombre intérieure sur la page -->
+          <polygon points="0,80 80,0 80,80" fill="url(#curl-shadow-inner)" opacity=".5"/>
+          <!-- Ligne de pli -->
+          <line x1="0" y1="80" x2="80" y2="0" stroke="rgba(0,0,0,.12)" stroke-width="1"/>
+        </svg>
+      </div>
     </div>
   </div>
 
@@ -1286,36 +1291,34 @@ function highlightToc(href){
 }
 
 // ── NAVIGATION PAGE ───────────────────────────────────────────────────────────
-// ── NAVIGATION PAGE avec effet FOLD ──────────────────────────────────────────
-// Phase 1 (fold-out, 280ms) → foliate change de page → Phase 2 (unfold-in, 280ms)
-let _folding = false;
+// ── NAVIGATION PAGE avec effet CURL ──────────────────────────────────────────
+// Le coin bas-droit (next) ou bas-gauche (prev) se soulève pendant 550ms.
+// foliate change de page au milieu de l'animation (t=220ms).
+let _curling = false;
 
-function playFold(action) {
+function playCurl(action, dir /* 'next' | 'prev' */) {
   if (!S.fView) return;
-  if (_folding) {
-    // Si déjà en animation, sauter directement
-    action();
-    return;
-  }
-  _folding = true;
-  const overlay = $('fold-overlay');
+  if (_curling) { action(); return; }
+  _curling = true;
 
-  // Phase 1 : fermeture
-  overlay.className = 'fold-out';
+  const overlay = $('curl-overlay');
+  overlay.className = dir; // positionne le coin gauche ou droit
+  // Forcer reflow pour que l'animation reparte de zéro
+  void overlay.offsetWidth;
+  overlay.classList.add('animating');
+
+  // Changer de page à mi-animation
+  setTimeout(() => action(), 220);
+
+  // Fin animation
   setTimeout(() => {
-    // Changer de page au milieu de l'animation
-    action();
-    // Phase 2 : ouverture — on attend le 'relocate' ou un délai fixe
-    overlay.className = 'unfold-in';
-    setTimeout(() => {
-      overlay.className = '';
-      _folding = false;
-    }, 300);
-  }, 260);
+    overlay.className = '';
+    _curling = false;
+  }, 560);
 }
 
-window.epubPrev = () => playFold(() => S.fView.prev());
-window.epubNext = () => playFold(() => S.fView.next());
+window.epubPrev = () => playCurl(() => S.fView.prev(), 'prev');
+window.epubNext = () => playCurl(() => S.fView.next(), 'next');
 
 document.addEventListener('keydown',e=>{
   if(!$('view-reader').classList.contains('on'))return;
