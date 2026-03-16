@@ -604,7 +604,7 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
 <div id="header">
   <div id="logo" onclick="goLib()">
     <span id="logo-icon">📚</span>
-    <span>Liseuse<span id="logo-ver">v7.6</span></span>
+    <span>Liseuse<span id="logo-ver">v7.7</span></span>
   </div>
   <div id="hdr-r">
     <div id="drive-dot" title="Drive"></div>
@@ -688,7 +688,7 @@ body.mode-night .btn-cancel{border-color:rgba(255,255,255,.1);color:#b0a890}
       <button id="btn-upload-lib" onclick="toggleUploadZone()">+ Ajouter</button>
     </div>
     <!-- Upload zone -->
-    <div id="upload-zone" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave()" onclick="$('file-input').click()">
+    <div id="upload-zone" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave()" onclick="openFilePicker()">
       <div style="font-size:1.8rem;margin-bottom:8px;opacity:.4">📂</div>
       Glissez un <strong>.epub</strong> ici ou cliquez pour choisir
     </div>
@@ -1091,7 +1091,8 @@ window.delBook=async id=>{
 };
 
 // ── UPLOAD ────────────────────────────────────────────────────────────────────
-window.toggleUploadZone=()=>$('upload-zone').classList.toggle('visible');
+window.openFilePicker=()=>document.getElementById('file-input').click();
+window.toggleUploadZone=()=>document.getElementById('upload-zone').classList.toggle('visible');
 window.dragOver=e=>{e.preventDefault();$('upload-zone').classList.add('drag');};
 window.dragLeave=()=>$('upload-zone').classList.remove('drag');
 window.dropFile=e=>{e.preventDefault();$('upload-zone').classList.remove('drag');handleFiles(e.dataTransfer.files);};
